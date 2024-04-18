@@ -4,7 +4,7 @@ This is a FastAPI application that uses the LLAMA2 model to summarize text.
 
 ## Features
 
-- Summarize text in at least 50, 100, or 200 words.
+- Summarize text.
 - Analyze the sentiment of reviews and categorize them as positive or negative.
 
 ## Setup
