@@ -2,11 +2,11 @@
 
 import ollama
 import json
-from .models import SummaryRequest
+
 
 reviews = []
 
-def reviewsanalysis(input_data: SummaryRequest):
+def reviewsanalysis(input_data: str):
     """
     Analyzes the sentiment of the input reviews and categorizes them as positive or negative.
 
@@ -22,7 +22,7 @@ def reviewsanalysis(input_data: SummaryRequest):
         model='llama2',
         messages=[{
             'role': 'user',
-            'content': f"Categorise the following reviews in just one word positive or negative : {input_data.text}",
+            'content': f"Categorise the following reviews in just one word positive or negative : {input_data}",
         }],
         stream=True,
     )
