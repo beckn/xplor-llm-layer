@@ -7,9 +7,7 @@ from typing import Dict, List, Union
 import subprocess
 from .py.summarizer import text_summarize
 from .py.reviews_analyzer import reviewsanalysis
-
-
-
+import time
 
 
 app = FastAPI(
@@ -24,28 +22,41 @@ app = FastAPI(
     openapi_url="/api/v1/openapi.json",
     openapi_tags=[{"name": "healthcheck", "description": "Healthcheck operations"},
                   {"name": "summarize", "description": "Summarization operations"},
-                  {"name": "review_analyser", "description": "Review Analyse operations"}
+                  {"name": "review_analyser",
+                      "description": "Review Analyse operations"}
                   ]
 
 )
 
 # Pull the llama2 model from the server
-#command = "ollama pull llama2"
+command_to_serve = "ollama serve"
+command_to_pull = "ollama pull llama2"
 
-# Execute the command
-#process = subprocess.Popen(command, shell=True)
+# Start the 'ollama serve' command in the background
+serve_process = subprocess.Popen(command_to_serve, shell=True)
+
+# Wait for a short period to ensure 'ollama serve' has started
+time.sleep(5)
+
+# Execute 'ollama pull llama2'
+pull_process = subprocess.Popen(command_to_pull, shell=True)
+
+# Wait for 'ollama pull llama2' to complete
+pull_process.wait()
 
 
 current_datetime = datetime.now()
 #################################################################################################################
 #                                   Health Check                                                                #
 #################################################################################################################
+
+
 @app.get("/healthcheck", tags=["healthcheck"])
 def health_check():
     """
     Health check endpoint to verify the status of the application.
     """
-    
+
     return {"status": "ok"}
 
 
@@ -54,12 +65,14 @@ def date_check():
     """
     Health check endpoint to verify the status of the application.
     """
-    
+
     return {"date": current_datetime}
 
 #################################################################################################################
 #                                   Summarize                                                                   #
 #################################################################################################################
+
+
 class SummaryRequest(BaseModel):
     text: str
     content_type: str
@@ -85,7 +98,8 @@ async def create_summary(request: SummaryRequest):
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         # Catch any other exceptions and return a generic error message
-        raise HTTPException(status_code=500, detail="An error occurred during summarization.")
+        raise HTTPException(
+            status_code=500, detail="An error occurred during summarization.")
 
 '''
 import requests
@@ -121,6 +135,7 @@ else:
 #################################################################################################################
 #                                   Review Analysis                                                             #
 #################################################################################################################
+
 
 @app.post('/reviewsanalysis')
 def reviewsanalysis_endpoint(input_data: SummaryRequest):

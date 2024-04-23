@@ -37,6 +37,13 @@ pip install -r requirements.txt
 uvicorn src.app:app --reload
 ```
 
+# Run the application using docker
+
+```sh
+docker build -t llama2-summarizer .
+docker run -p 8000:8000 llama2-summarizer
+```
+
 ## Usage
 
 The API has the following endpoints:
@@ -45,13 +52,13 @@ The API has the following endpoints:
 - `POST /reviewsanalysis`: Analyzes the sentiment of the input reviews.
 
 Each endpoint accepts a JSON object with the following structure:
-
-```json
+```sh
 {
-    "text": "your message here"
+    "text": "your message here",
+    "content_type": "["course", "scholarship", "jobs"]"
 }
 ```
-
+content_type accepts a string from the above list.
 ## Authors
 
 [WITSLAB](https://www.thewitslab.com/)
