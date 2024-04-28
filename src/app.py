@@ -6,7 +6,7 @@ from pydantic import BaseModel, validator
 from typing import Dict, List, Union
 import subprocess
 from .py.summarizer import text_summarize
-from .py.reviews_analyzer import reviewsanalysis
+from .py.reviews_analyser import review_analyser
 import time
 
 
@@ -20,17 +20,16 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redocs",
     openapi_url="/api/v1/openapi.json",
-    openapi_tags=[{"name": "healthcheck", "description": "Healthcheck operations"},
-                  {"name": "summarize", "description": "Summarization operations"},
-                  {"name": "review_analyser",
-                      "description": "Review Analyse operations"}
+    openapi_tags=[{"name": "Health Check", "description": "Healthcheck operations"},
+                  {"name": "Summarise", "description": "Summarisation operations"},
+                  {"name": "Review Analyser", "description": "Review Analyse operations"}
                   ]
 
 )
 
 # Pull the llama2 model from the server
 command_to_serve = "ollama serve"
-command_to_pull = "ollama pull llama2"
+command_to_pull = "ollama pull mistral"
 
 # Start the 'ollama serve' command in the background
 serve_process = subprocess.Popen(command_to_serve, shell=True)
@@ -51,7 +50,7 @@ current_datetime = datetime.now()
 #################################################################################################################
 
 
-@app.get("/healthcheck", tags=["healthcheck"])
+@app.get("/healthcheck", tags=["Health Check"])
 def health_check():
     """
     Health check endpoint to verify the status of the application.
@@ -60,7 +59,7 @@ def health_check():
     return {"status": "ok"}
 
 
-@app.get("/datecheck", tags=["healthcheck"])
+@app.get("/datecheck", tags=["Health Check"])
 def date_check():
     """
     Health check endpoint to verify the status of the application.
@@ -86,7 +85,7 @@ class SummaryRequest(BaseModel):
         return v
 
 
-@app.post('/summarize/', tags=["summarize"])
+@app.post('/summarise/', tags=["Summarise"])
 async def create_summary(request: SummaryRequest):
     try:
         # Use the utility function to summarize the text
@@ -137,6 +136,27 @@ else:
 #################################################################################################################
 
 
-@app.post('/reviewsanalysis')
-def reviewsanalysis_endpoint(input_data: SummaryRequest):
-    return reviewsanalysis(input_data)
+class ReviewAnalyser(BaseModel):
+    reviews: Union[str, List[str]]  
+
+@app.post('/review_analysis', tags=["Review Analyser"])
+async def create_review_analyser(input_data: ReviewAnalyser):
+    try:
+        # Convert input data to a single string
+        if isinstance(input_data.reviews, list):
+            # Join list elements into a single string separated by spaces
+            combined_reviews = " ".join(input_data.reviews)
+        else:
+            combined_reviews = input_data.reviews
+
+        # Pass the combined string to the review_analyser function
+        summary = review_analyser(combined_reviews)
+        return {"summary": summary}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except TypeError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        # Catch any other exceptions and return a generic error message
+        raise HTTPException(status_code=500, detail=f"An error occurred during review analysis: {str(e)}")
+
