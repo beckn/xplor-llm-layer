@@ -10,8 +10,8 @@ import pandas as pd
 from functools import lru_cache, wraps
 import warnings
 from typing import Dict, List
-warnings.filterwarnings("ignore")
 
+warnings.filterwarnings("ignore")
 
 #############################################################################################################
 #############################################################################################################
@@ -20,9 +20,9 @@ warnings.filterwarnings("ignore")
 #############################################################################################################
 
 
-
 # Configure logging
-logging.basicConfig(filename='../app.log',level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='../app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 def log_function_data(func):
     @wraps(func)
@@ -32,17 +32,19 @@ def log_function_data(func):
 
         end_time = time.time()
         execution_time = end_time - start_time
-        
+
         # Log the demarcation 
         logging.info(f"--------------------------------------------------------------------")
         # Log the function's input (arguments and keyword arguments) & function's output
-        logging.info(f"Executing {func.__name__} with args: {args}, kwargs: {kwargs} and function returned:  {result} ")    
-        
+        logging.info(f"Executing {func.__name__} with args: {args}, kwargs: {kwargs} and function returned:  {result} ")
+
         # Log the execution time
         logging.info(f"{func.__name__} execution time: {execution_time:.4f} seconds")
 
         return result
+
     return wrapper
+
 
 # Example usage of the decorator
 #@log_function_data
@@ -107,11 +109,12 @@ def calculate_summary_length(text_length):
         if text_length < 300:
             summary_length = int(0.5 * text_length)  # 50% of original for short texts.
         elif text_length < 1000:
-            summary_length = max(int(0.3 * text_length), int(0.5 - (text_length - 300) / 3500 * text_length))  # Scale down to 30%.
+            summary_length = max(int(0.3 * text_length),
+                                 int(0.5 - (text_length - 300) / 3500 * text_length))  # Scale down to 30%.
         else:
-            summary_length = max(int(0.1 * text_length), int(0.3 - (text_length - 1000) / 9000 * text_length))  # Scale down to 10%.
+            summary_length = max(int(0.1 * text_length),
+                                 int(0.3 - (text_length - 1000) / 9000 * text_length))  # Scale down to 10%.
     return summary_length
-
 
 
 #############################################################################################################
@@ -125,6 +128,7 @@ For now just keep str input in two .py files and use a class in app.py
 
 
 '''
+
 
 def hydrate_summary_prompt(text: str, sum_length: int, content_type: str):
     """
@@ -162,11 +166,33 @@ def hydrate_summary_prompt(text: str, sum_length: int, content_type: str):
                    """
     }
     return [user_prompt]
+
+
 # Example usage:
 #content_text = "This course offers an in-depth exploration of modern data sciences, covering key concepts, applications, and tools. It is ideal for professionals seeking to enhance their understanding of data analysis and machine learning."
 #prompt = hydrate_summary_prompt(content_text, 30, 'course')
 #print(prompt)
+def hydrate_language_prompt(state: str, country: str):
+    user_prompt = {
+        'role': 'user',
+        'content': f""" List of language spoken in {state} in {country} (return json with just two keys - language, 
+        percentage with % sign) in descending order.No preceding sentences or succeeding 
+        sentences. Dont leave any notes at the end."""
 
+    }
+    return [user_prompt]
+
+
+def language_identification(prompts: List[Dict[str, str]]) -> dict:
+    try:
+        response = ollama.chat(
+            model='llama3',
+            messages=prompts,
+            stream=False,
+        )
+        return json.loads(response['message']['content'])
+    except Exception as e:
+        raise RuntimeError("Failed to identify language due to an external API error: " + str(e))
 
 
 def summarize(prompts: List[Dict[str, str]]) -> str:
@@ -182,7 +208,7 @@ def summarize(prompts: List[Dict[str, str]]) -> str:
     try:
         # Assuming the ollama chat function accepts a list of prompts formatted as required
         response = ollama.chat(
-            model='mistral',
+            model='llama3',
             messages=prompts,
             stream=False,
         )
@@ -250,7 +276,6 @@ def process_text(input_text: str):
             return input_text
 
 
-
 def hydrate_review_analyser_prompt(text: str):
     user_prompt = {
         'role': 'user',
@@ -275,6 +300,7 @@ def hydrate_review_analyser_prompt(text: str):
     }
     return [user_prompt]
 
+
 def analyse(prompts: List[Dict[str, str]]) -> str:
     """
     Calls an external API or model to generate a summary based on the given prompts.
@@ -288,7 +314,7 @@ def analyse(prompts: List[Dict[str, str]]) -> str:
     try:
         # Assuming the ollama chat function accepts a list of prompts formatted as required
         response = ollama.chat(
-            model='mistral',
+            model='llama3',
             messages=prompts,
             stream=False,
         )
