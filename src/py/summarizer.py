@@ -3,6 +3,7 @@ import json
 from typing import Dict, List
 from .utils import *
 
+
 def text_summarize(text: str, content_type: str) -> str:
     """
     Summarizes the provided text based on the specified content type.
@@ -34,4 +35,3 @@ def text_summarize(text: str, content_type: str) -> str:
     # Get the summary from an external summarization function, passing the prompt
     summary = summarize(prompts)
     return summary
-
