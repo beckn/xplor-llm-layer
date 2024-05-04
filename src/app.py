@@ -5,14 +5,16 @@ from datetime import datetime
 from pydantic import BaseModel, validator
 from typing import Dict, List, Union
 import subprocess
+
+from .py.language_selection import language_selection_service
 from .py.summarizer import text_summarize
 from .py.reviews_analyser import review_analyser
 import time
 
-
 app = FastAPI(
-    title="Xplor - LLAMA2 Summarizer API",
-    description="Summarize your text using LLAMA2",
+    title="Xplor - LLAMA3 Services API",
+    description="This API provides access to the LLAMA3 services for summarization, review analysis, and language "
+                "selection based on location.",
     version="v0.0.1",
     contact={
         "name": "WITSLAB"
@@ -22,14 +24,15 @@ app = FastAPI(
     openapi_url="/api/v1/openapi.json",
     openapi_tags=[{"name": "Health Check", "description": "Healthcheck operations"},
                   {"name": "Summarise", "description": "Summarisation operations"},
-                  {"name": "Review Analyser", "description": "Review Analyse operations"}
+                  {"name": "Review Analyser", "description": "Review Analyse operations"},
+                  {"name": "language Selection based on Location", "description": "Language Selection operations"}
                   ]
 
 )
 
 # Pull the llama2 model from the server
 command_to_serve = "ollama serve"
-command_to_pull = "ollama pull mistral"
+command_to_pull = "ollama pull llama3"
 
 # Start the 'ollama serve' command in the background
 serve_process = subprocess.Popen(command_to_serve, shell=True)
@@ -43,8 +46,9 @@ pull_process = subprocess.Popen(command_to_pull, shell=True)
 # Wait for 'ollama pull llama2' to complete
 pull_process.wait()
 
-
 current_datetime = datetime.now()
+
+
 #################################################################################################################
 #                                   Health Check                                                                #
 #################################################################################################################
@@ -66,6 +70,7 @@ def date_check():
     """
 
     return {"date": current_datetime}
+
 
 #################################################################################################################
 #                                   Summarize                                                                   #
@@ -100,6 +105,28 @@ async def create_summary(request: SummaryRequest):
         raise HTTPException(
             status_code=500, detail="An error occurred during summarization.")
 
+
+class LocationRequest(BaseModel):
+    state: str
+    country: str
+
+
+@app.post('/language_selection', tags=['language Selection based on Location'])
+async def language_selection(request: LocationRequest):
+    try:
+        # Use the utility function to summarize the text
+        language = language_selection_service(request.state, request.country)
+        return {"languages": language}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except TypeError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        # Catch any other exceptions and return a generic error message
+        raise HTTPException(
+            status_code=500, detail="An error occurred during fetching language.")
+
+
 '''
 import requests
 
@@ -131,13 +158,15 @@ else:
 
 '''
 
+
 #################################################################################################################
 #                                   Review Analysis                                                             #
 #################################################################################################################
 
 
 class ReviewAnalyser(BaseModel):
-    reviews: Union[str, List[str]]  
+    reviews: Union[str, List[str]]
+
 
 @app.post('/review_analysis', tags=["Review Analyser"])
 async def create_review_analyser(input_data: ReviewAnalyser):
@@ -159,4 +188,3 @@ async def create_review_analyser(input_data: ReviewAnalyser):
     except Exception as e:
         # Catch any other exceptions and return a generic error message
         raise HTTPException(status_code=500, detail=f"An error occurred during review analysis: {str(e)}")
-

@@ -13,14 +13,11 @@ RUN apt-get update && apt-get install git -y && apt-get install curl -y
 # Install Ollama
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
 # Copy the source code to the working directory
 COPY ./src ./src
 
-# Expose port 8000
-EXPOSE 8000
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Start the application using uvicorn
-CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "8000"]
