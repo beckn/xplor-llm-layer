@@ -25,7 +25,7 @@ app = FastAPI(
     openapi_tags=[{"name": "Health Check", "description": "Healthcheck operations"},
                   {"name": "Summarise", "description": "Summarisation operations"},
                   {"name": "Review Analyser", "description": "Review Analyse operations"},
-                  {"name": "language Selection based on Location", "description": "Language Selection operations"}
+                  {"name": "Location Based language Selection", "description": "Language Selection operations"}
                   ]
 
 )
@@ -105,28 +105,6 @@ async def create_summary(request: SummaryRequest):
         raise HTTPException(
             status_code=500, detail="An error occurred during summarization.")
 
-
-class LocationRequest(BaseModel):
-    state: str
-    country: str
-
-
-@app.post('/language_selection', tags=['language Selection based on Location'])
-async def language_selection(request: LocationRequest):
-    try:
-        # Use the utility function to summarize the text
-        language = language_selection_service(request.state, request.country)
-        return {"languages": language}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except TypeError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    except Exception as e:
-        # Catch any other exceptions and return a generic error message
-        raise HTTPException(
-            status_code=500, detail="An error occurred during fetching language.")
-
-
 '''
 import requests
 
@@ -188,3 +166,29 @@ async def create_review_analyser(input_data: ReviewAnalyser):
     except Exception as e:
         # Catch any other exceptions and return a generic error message
         raise HTTPException(status_code=500, detail=f"An error occurred during review analysis: {str(e)}")
+
+
+#################################################################################################################
+#                                   Location Based Language                                                     #
+#################################################################################################################
+
+class LocationRequest(BaseModel):
+    city : str
+    state: str
+    country: str
+
+
+@app.post('/language_selection', tags=['Location Based language Selection'])
+async def language_selection(request: LocationRequest):
+    try:
+        # Use the utility function to summarize the text
+        language = language_selection_service(request.city, request.state, request.country)
+        return {"languages": language}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except TypeError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        # Catch any other exceptions and return a generic error message
+        raise HTTPException(
+            status_code=500, detail="An error occurred during fetching language.")

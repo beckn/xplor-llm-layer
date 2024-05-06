@@ -168,55 +168,32 @@ def hydrate_summary_prompt(text: str, sum_length: int, content_type: str):
     return [user_prompt]
 
 
-# Example usage:
-#content_text = "This course offers an in-depth exploration of modern data sciences, covering key concepts, applications, and tools. It is ideal for professionals seeking to enhance their understanding of data analysis and machine learning."
-#prompt = hydrate_summary_prompt(content_text, 30, 'course')
-#print(prompt)
-def hydrate_language_prompt(state: str, country: str):
-    user_prompt = {
-        'role': 'user',
-        'content': f""" List of language spoken in {state} in {country} (return json with just two keys - language, 
-        percentage with % sign) in descending order.No preceding sentences or succeeding 
-        sentences. Dont leave any notes at the end."""
-
-    }
-    return [user_prompt]
-
-
-def language_identification(prompts: List[Dict[str, str]]) -> dict:
-    try:
-        response = ollama.chat(
-            model='llama3',
-            messages=prompts,
-            stream=False,
-        )
-        return json.loads(response['message']['content'])
-    except Exception as e:
-        raise RuntimeError("Failed to identify language due to an external API error: " + str(e))
-
-
-def summarize(prompts: List[Dict[str, str]]) -> str:
+@lru_cache(maxsize=128)
+def summarize(prompts_hashable: str) -> str:
     """
     Calls an external API or model to generate a summary based on the given prompts.
-
+    
     Parameters:
-    prompts (List[Dict[str, str]]): A list of dictionaries that contain the prompts for summarization.
-
+    prompts_hashable (str): A JSON string that contains the list of dictionaries with the prompts for summarization.
+    
     Returns:
     str: The summarized text.
     """
     try:
-        # Assuming the ollama chat function accepts a list of prompts formatted as required
+        prompts = json.loads(prompts_hashable)  # Convert JSON string back to list of dictionaries
         response = ollama.chat(
             model='llama3',
             messages=prompts,
             stream=False,
         )
-        # Assuming the summary is correctly formatted in the response under 'message' and 'content'
         return response['message']['content']
     except Exception as e:
         raise RuntimeError("Failed to generate summary due to an external API error: " + str(e))
 
+# Helper function to convert prompts to hashable type and call the cached function
+def call_summarize(prompts: List[Dict[str, str]]) -> str:
+    prompts_hashable = json.dumps(prompts)  # Convert list of dicts to a JSON string
+    return summarize(prompts_hashable)
 
 #summarize("""  To make it easy for you to get started with GitLab, here's a list of recommended next steps.  """)
 
@@ -300,25 +277,87 @@ def hydrate_review_analyser_prompt(text: str):
     }
     return [user_prompt]
 
-
-def analyse(prompts: List[Dict[str, str]]) -> str:
+@lru_cache(maxsize=128)
+def analyse(prompts_hashable: str) -> str:
     """
     Calls an external API or model to generate a summary based on the given prompts.
 
     Parameters:
-    prompts (List[Dict[str, str]]): A list of dictionaries that contain the prompts for summarization.
+    prompts_hashable (str): A JSON string that contains the list of dictionaries with the prompts for summarization.
 
     Returns:
     str: The summarized text.
     """
     try:
-        # Assuming the ollama chat function accepts a list of prompts formatted as required
+        prompts = json.loads(prompts_hashable)  # Convert JSON string back to list of dictionaries
         response = ollama.chat(
             model='llama3',
             messages=prompts,
             stream=False,
         )
-        # Assuming the summary is correctly formatted in the response under 'message' and 'content'
         return response['message']['content']
     except Exception as e:
         raise RuntimeError("Failed to generate review due to an external API error: " + str(e))
+
+# Helper function to convert prompts to hashable type and call the cached function
+def call_analyse(prompts: List[Dict[str, str]]) -> str:
+    prompts_hashable = json.dumps(prompts)  # Convert list of dicts to a JSON string
+    return analyse(prompts_hashable)
+
+#############################################################################################################
+#############################################################################################################
+#                                   UTILS FOR Location based Language                                       #
+#############################################################################################################
+#############################################################################################################
+
+
+# Example usage:
+#content_text = "This course offers an in-depth exploration of modern data sciences, covering key concepts, applications, and tools. It is ideal for professionals seeking to enhance their understanding of data analysis and machine learning."
+#prompt = hydrate_summary_prompt(content_text, 30, 'course')
+#print(prompt)
+def hydrate_language_prompt(city:str, state: str, country: str):
+    user_prompt = {
+        'role': 'user',
+        'content': f""" you are an language detector. you will be given two inputs. The state/province and country. 
+        Your job is to output the languages spoken there widely in the descending order. 
+        The city/ town is {city} ,state/province is {state} in the country of {country}. 
+        Give me the List of language spoken there. 
+        The output should be returned in json format with just two keys - language, percentage with % sign in descending order of usagae. 
+        Example of Format:
+{
+    {
+      "language": "Hindi",
+      "percentage": "89%"
+    },
+    {
+      "language": "English",
+      "percentage": "8.1%"
+    },
+    {
+      "language": "Punjabi",
+      "percentage": "2.4%"
+    }
+}
+        No preceding sentences or succeeding sentences. Dont leave any notes at the end."""
+
+    }
+    return [user_prompt]
+
+
+@lru_cache(maxsize=128)
+def language_identification(prompts_hashable):
+    try:
+        prompts = json.loads(prompts_hashable)  # convert back to original structure inside the function
+        response = ollama.chat(
+            model='llama3',
+            messages=prompts,
+            stream=False,
+        )
+        return json.loads(response['message']['content'])
+    except Exception as e:
+        raise RuntimeError("Failed to identify language due to an external API error: " + str(e))
+
+# Convert input to a hashable type (string) before passing to function
+def call_language_identification(prompts: List[Dict[str, str]]) -> dict:
+    prompts_hashable = json.dumps(prompts)  # convert list of dicts to a JSON string
+    return language_identification(prompts_hashable)

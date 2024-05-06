@@ -33,5 +33,5 @@ def text_summarize(text: str, content_type: str) -> str:
     # Generate the appropriate summarization prompt
     prompts = hydrate_summary_prompt(text, sum_length, content_type)
     # Get the summary from an external summarization function, passing the prompt
-    summary = summarize(prompts)
+    summary = call_summarize(prompts)
     return summary

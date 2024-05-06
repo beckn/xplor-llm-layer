@@ -11,6 +11,6 @@ def review_analyser(text: str) -> str:
     # Generate the appropriate summarization prompt
     prompts = hydrate_review_analyser_prompt(cut_text)
     # Get the summary from an external summarization function, passing the prompt
-    summary = analyse(prompts)
+    summary = call_analyse(prompts)
     return summary
 
