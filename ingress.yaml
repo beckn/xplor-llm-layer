@@ -1,0 +1,24 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: "dev-llm-ingress"
+  namespace: "dev-llm"
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "xplor-static-ip"
+spec:
+  tls:
+  - hosts:
+    - "llm-dev.thewitslab.com"
+    secretName: "tls-secret"
+  rules:
+  - host: "llm-dev.thewitslab.com"
+    http:
+      paths:
+      - path: "/*"
+        pathType: "ImplementationSpecific"
+        backend:
+          service:
+            name: "llm-svc"
+            port:
+              number: 5000

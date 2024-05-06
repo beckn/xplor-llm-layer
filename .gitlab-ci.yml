@@ -1,0 +1,40 @@
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  tags:
+    - gcp
+  only:
+    - gcp_dev
+  script:
+    - echo "$xplor_json_key" >> key.json
+    - cat key.json | docker login -u _json_key --password-stdin https://asia.gcr.io
+    - docker build --platform=linux/amd64 --pull -t "asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/xplor-llm-services:$CI_COMMIT_SHORT_SHA" .
+    - docker push asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/xplor-llm-services:$CI_COMMIT_SHORT_SHA
+    - docker logout https://asia.gcr.io/dev-llm
+    - docker image prune -af
+    - echo "Image Tag- asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/xplor-llm-services:$CI_COMMIT_SHORT_SHA"
+
+deploy:
+  stage: deploy
+  tags:
+    - gcp
+  only:
+    - gcp_dev
+  script:
+    - cat $WITS_PEM_KEY >> wits.pem
+    - cat $WITS_PRIV_KEY >> wits.key
+
+    ## Creating Namespace
+    - kubectl apply -f namespace.yaml
+
+    ## Deploying 'dev-llm-backend' in Namespace
+    - sed "s/latest/${CI_COMMIT_SHORT_SHA}/g" deployment.yaml > deployment.tmp
+    - mv deployment.tmp deployment.yaml
+    - kubectl apply -f deployment.yaml
+    - echo -e "Dev LLM  Backend URL:- https://llm-dev.thewitslab.com/"
+
+    ## Deploying 'ingress' in Namespace
+    - kubectl apply -f ingress.yaml

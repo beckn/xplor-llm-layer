@@ -1,0 +1,83 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dev-llm-backend
+  name: dev-llm-backend
+  namespace: dev-llm
+spec:
+  selector:
+    matchLabels:
+      app: dev-llm-backend
+  template:
+    metadata:
+      labels:
+        app: dev-llm-backend
+    spec:
+      containers:
+      - image: asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/xplor-llm-services:latest
+        imagePullPolicy: Always
+        name: dev-llm-backend
+        resources:
+          requests:
+            cpu: "1000m"
+            memory: "4000Mi"
+          limits:
+            cpu: "2000m" 
+            memory: "8000Mi"
+        ports:
+        - containerPort: 8000
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthcheck
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /healthcheck
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 10
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  labels:
+    app: llm-autoscaling
+  name: llm-autoscaling
+  namespace: dev-llm
+spec:
+  maxReplicas: 1
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: dev-llm-backend
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dev-llm-backend
+  name: llm-svc
+  namespace: dev-llm
+spec:
+  ports:
+  - port: 5000
+    targetPort: 8000
+    protocol: TCP
+  selector:
+    app: dev-llm-backend
+  type: NodePort
