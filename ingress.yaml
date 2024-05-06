@@ -5,7 +5,7 @@ metadata:
   name: "dev-llm-ingress"
   namespace: "dev-llm"
   annotations:
-    kubernetes.io/ingress.global-static-ip-name: "xplor-static-ip"
+    kubernetes.io/ingress.global-static-ip-name: "xplor-llm-ip"
 spec:
   tls:
   - hosts:
