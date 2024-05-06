@@ -25,4 +25,4 @@ RUN chmod +x run_ollama.sh \
     && ./run_ollama.sh
 
 # Start the application using uvicorn
-CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "8000"]
