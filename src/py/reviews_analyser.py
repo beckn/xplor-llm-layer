@@ -14,3 +14,6 @@ def review_analyser(text: str) -> str:
     summary = call_analyse(prompts)
     return summary
 
+def clear_cache_review_analyser():
+    analyse.cache_clear()
+    return True

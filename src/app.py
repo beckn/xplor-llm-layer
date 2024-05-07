@@ -6,9 +6,10 @@ from pydantic import BaseModel, validator
 from typing import Dict, List, Union
 import subprocess
 
-from .py.language_selection import language_selection_service
-from .py.summarizer import text_summarize
-from .py.reviews_analyser import review_analyser
+from .py.language_selection import language_selection_service, clear_cache_language_identification
+from .py.summarizer import text_summarize, clear_cache_text_summarize
+from .py.reviews_analyser import review_analyser, clear_cache_review_analyser
+from .py.network_selection import network_selection_service, clear_cache_network_identification
 import time
 
 app = FastAPI(
@@ -25,7 +26,8 @@ app = FastAPI(
     openapi_tags=[{"name": "Health Check", "description": "Healthcheck operations"},
                   {"name": "Summarise", "description": "Summarisation operations"},
                   {"name": "Review Analyser", "description": "Review Analyse operations"},
-                  {"name": "Location Based language Selection", "description": "Language Selection operations"}
+                  {"name": "Location Based language Selection", "description": "Language Selection operations"},
+                  {"name": "Search Based Network Selection", "description": "Network Selection operations"}
                   ]
 
 )
@@ -70,6 +72,38 @@ def date_check():
     """
 
     return {"date": current_datetime}
+
+
+
+
+#################################################################################################################
+#                                   Clear Cache                                                                 #
+#################################################################################################################
+
+@app.post("/clear_cache/", tags=["Health Check"])
+async def clear_cache():
+    summary = clear_cache_text_summarize()
+    review = clear_cache_review_analyser()
+    language = clear_cache_language_identification()
+    network = clear_cache_network_identification()
+    if summary:
+        a = "Summary Cache Cleared"
+    else:
+        a = "Summary Cache Not Cleared"
+    if review:
+        b = "Review Cache Cleared"
+    else:
+        b = "Review Cache Not Cleared"
+    if language:
+        c = "Language Cache Cleared"
+    else:
+        c = "Language Cache Not Cleared"
+    if network:
+        d = "Network Cache Cleared"
+    else:
+        d = "Network Cache Not Cleared"
+    return {"status": a + b + c + d }
+
 
 
 #################################################################################################################
@@ -192,3 +226,26 @@ async def language_selection(request: LocationRequest):
         # Catch any other exceptions and return a generic error message
         raise HTTPException(
             status_code=500, detail="An error occurred during fetching language.")
+    
+#################################################################################################################
+#                                   Location Based Language                                                     #
+#################################################################################################################
+
+class NetworkRequest(BaseModel):
+    search_item : str
+
+
+@app.post('/network_selection', tags=['Search Based Network Selection'])
+async def network_selection(request: NetworkRequest):
+    try:
+        # Use the utility function to summarize the text
+        network = network_selection_service(request.search_item)
+        return network
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except TypeError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        # Catch any other exceptions and return a generic error message
+        raise HTTPException(
+            status_code=500, detail="An error occurred during fetching network.")
