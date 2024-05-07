@@ -182,7 +182,7 @@ def summarize(prompts_hashable: str) -> str:
     try:
         prompts = json.loads(prompts_hashable)  # Convert JSON string back to list of dictionaries
         response = ollama.chat(
-            model='llama3',
+            model='phi3',
             messages=prompts,
             stream=False,
         )
@@ -291,7 +291,7 @@ def analyse(prompts_hashable: str) -> str:
     try:
         prompts = json.loads(prompts_hashable)  # Convert JSON string back to list of dictionaries
         response = ollama.chat(
-            model='llama3',
+            model='phi3',
             messages=prompts,
             stream=False,
         )
@@ -349,7 +349,7 @@ def language_identification(prompts_hashable):
     try:
         prompts = json.loads(prompts_hashable)  # convert back to original structure inside the function
         response = ollama.chat(
-            model='llama3',
+            model='phi3',
             messages=prompts,
             stream=False,
         )
