@@ -15,6 +15,8 @@ spec:
       labels:
         app: dev-llm-backend
     spec:
+      nodeSelector:
+        node: gpu-node-pool
       containers:
       - image: asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/xplor-llm-services:latest
         imagePullPolicy: Always
@@ -22,10 +24,10 @@ spec:
         resources:
           requests:
             cpu: "2000m"
-            memory: "8000Mi"
+            memory: "13000Mi"
           limits:
             cpu: "2000m" 
-            memory: "10000Mi"
+            memory: "13000Mi"
         ports:
         - containerPort: 8000
           protocol: TCP
@@ -41,6 +43,10 @@ spec:
             port: 8000
           initialDelaySeconds: 20
           periodSeconds: 10
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
 
 ---
 apiVersion: autoscaling/v2
