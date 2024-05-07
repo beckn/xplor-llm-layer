@@ -24,3 +24,8 @@ def language_selection_service(city:str, state: str, country: str) -> dict:
     language_identified = call_language_identification(language_identified_prompt)
 
     return language_identified
+
+
+def clear_cache_language_identification():
+    language_identification.cache_clear()
+    return True

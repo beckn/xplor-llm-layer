@@ -182,7 +182,7 @@ def summarize(prompts_hashable: str) -> str:
     try:
         prompts = json.loads(prompts_hashable)  # Convert JSON string back to list of dictionaries
         response = ollama.chat(
-            model='phi3',
+            model='llama3',
             messages=prompts,
             stream=False,
         )
@@ -291,7 +291,7 @@ def analyse(prompts_hashable: str) -> str:
     try:
         prompts = json.loads(prompts_hashable)  # Convert JSON string back to list of dictionaries
         response = ollama.chat(
-            model='phi3',
+            model='llama3',
             messages=prompts,
             stream=False,
         )
@@ -349,7 +349,7 @@ def language_identification(prompts_hashable):
     try:
         prompts = json.loads(prompts_hashable)  # convert back to original structure inside the function
         response = ollama.chat(
-            model='phi3',
+            model='llama3',
             messages=prompts,
             stream=False,
         )
@@ -361,3 +361,81 @@ def language_identification(prompts_hashable):
 def call_language_identification(prompts: List[Dict[str, str]]) -> dict:
     prompts_hashable = json.dumps(prompts)  # convert list of dicts to a JSON string
     return language_identification(prompts_hashable)
+
+
+
+#############################################################################################################
+#############################################################################################################
+#                                   UTILS FORNetwork Routing                                                #
+#############################################################################################################
+#############################################################################################################
+
+def hydrate_network_prompt(search_item: str):
+    user_prompt = {
+        'role': 'user',
+        'content': f""" 
+        You are tasked with determining the most suitable network for a given search query based on predefined categories associated with each network. 
+        A network is basically a system which can provide few services. Example ONDC can have retail or ecommerce services. 
+        Example : Tooth paste or food delivery or restaurant or shoes or clothes 
+        And Onest can have skill development course like python, java etc; And job postings and scholarship oppurtunities. 
+
+        You need to understand what the network is about and what the input query is about and take a decision of which network will best cater to the asked query.
+
+
+        Below is the JSON structure containing the networks and their relevant search categories. 
+        Your goal is to analyze the search query and identify which network's categories best align with the query.
+
+        Input will be provided in JSON format containing an array of networks, where each network has a name and a list of search categories. 
+        Additionally, a search query will be provided, which is a simple string.
+
+        {{
+        "networks": [
+            {{
+            "name": "ONEST Network",
+            "search_categories": ["skill", "education", "scholarships"]
+             }},
+            {{
+            "name": "ONDC Network",
+            "search_categories": ["retail", "e-commerce"]
+            }}
+        ],
+            "search_query": "python courses"
+        }}
+
+        Output should be a JSON object indicating the most suitable network for the given search query. The output should include the network's name.
+
+        {{
+            "matched_network": "ONEST Network"
+        }}
+
+        The output has to be the json only. Nothing else. No explaination.
+
+        In cases where the search query does not clearly match any network's categories, always return a response from one of the networks. 
+        For ambiguous cases where a query may fit multiple networks reasonably well, return the network that has the highest number of matching keywords with the query.
+
+        The input query is : {search_item}
+        """
+
+    }
+    return [user_prompt]
+
+
+@lru_cache(maxsize=128)
+def network_identification(prompts_hashable):
+    try:
+        prompts = json.loads(prompts_hashable)  # convert back to original structure inside the function
+        response = ollama.chat(
+            model='llama3',
+            messages=prompts,
+            stream=False,
+        )
+        print((response['message']['content']))
+        return json.loads(response['message']['content'])
+    except Exception as e:
+        raise RuntimeError("Failed to identify network due to an external API error: " + str(e))
+
+# Convert input to a hashable type (string) before passing to function
+def call_network_identification(prompts: List[Dict[str, str]]) -> dict:
+    prompts_hashable = json.dumps(prompts)  # convert list of dicts to a JSON string
+    return network_identification(prompts_hashable)
+

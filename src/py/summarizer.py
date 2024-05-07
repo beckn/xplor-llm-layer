@@ -35,3 +35,8 @@ def text_summarize(text: str, content_type: str) -> str:
     # Get the summary from an external summarization function, passing the prompt
     summary = call_summarize(prompts)
     return summary
+
+
+def clear_cache_text_summarize():
+    summarize.cache_clear()
+    return True
