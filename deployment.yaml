@@ -21,11 +21,11 @@ spec:
         name: dev-llm-backend
         resources:
           requests:
-            cpu: "1000m"
-            memory: "4000Mi"
+            cpu: "2000m"
+            memory: "8000Mi"
           limits:
             cpu: "2000m" 
-            memory: "8000Mi"
+            memory: "10000Mi"
         ports:
         - containerPort: 8000
           protocol: TCP
