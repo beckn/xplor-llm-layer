@@ -1,7 +1,6 @@
 ## Utils file 
 ## Contains all the reusable functions 
 
-import ollama
 import json
 import logging
 import time
