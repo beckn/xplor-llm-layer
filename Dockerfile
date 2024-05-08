@@ -13,10 +13,7 @@ RUN apt-get update && apt-get install git -y && apt-get install curl -y
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-
-RUN echo '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' | huggingface-cli login && \
-    transformers-cli download meta-llama/Meta-Llama-3-8B --model
-
+RUN huggingface-cli login --token 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 && transformers-cli download meta-llama/Meta-Llama-3-8B --model
 # Copy the source code to the working directory
 COPY ./src ./src
 
