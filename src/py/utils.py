@@ -8,31 +8,35 @@ from datetime import datetime
 import pandas as pd
 from transformers import AutoTokenizer, AutoModelForCausalLM , BitsAndBytesConfig
 import torch
-from accelerate import disk_offload
+#from accelerate import disk_offload
 from huggingface_hub import login
 from functools import lru_cache, wraps
 import warnings
 from typing import Dict, List
 warnings.filterwarnings("ignore")
 
+print("logging into the huggingface")
 # Your Hugging Face API token
 api_token = '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'
 
 login(api_token)
 
-model_id = "meta-llama/Meta-Llama-3-8B"
+model_id = "../code/llama3/"
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16)
+model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16,trust_remote_code=True)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
 # Now you can use the model and tokenizer as needed
-#model.save_pretrained(r"/Users/sravanth_elovee/Desktop/xplor-summarizer/llama3/.")
-#tokenizer.save_pretrained(r"/Users/sravanth_elovee/Desktop/xplor-summarizer/llama3/.")
+#model.save_pretrained(r"/Users/sravanth_elovee/Desktop/xplor-summarizer/phi2/.")
+#tokenizer.save_pretrained(r"/Users/sravanth_elovee/Desktop/xplor-summarizer/phi2/.")
 #disk_offload(model=model, offload_dir="offload")
 
+print(model)
+print(tokenizer)
+print("model loaded")
 
 #############################################################################################################
 #############################################################################################################
@@ -42,7 +46,7 @@ model.to(device)
 
 
 # Configure logging
-logging.basicConfig(filename='../app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='code/app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def log_function_data(func):
@@ -83,7 +87,7 @@ def log_function_data(func):
 #                                   UTILS FOR LLM Call                                                      #
 #############################################################################################################
 #############################################################################################################
-
+@log_function_data
 def llm_output(prompts_hashable, max_new_tokens_size ):
     input_ids = tokenizer.apply_chat_template(
         prompts_hashable,
@@ -365,7 +369,7 @@ def call_analyse(prompts: List[Dict[str, str]]) -> str:
 #prompt = hydrate_summary_prompt(content_text, 30, 'course')
 #print(prompt)
 def hydrate_language_prompt(city:str, state: str, country: str):
-    user_prompt = {
+    user_prompt = [{"role": "system", "content": "You are an expert in detecting the language based on the location details."},{
         'role': 'user',
         'content': f""" you are an language detector. you will be given two inputs. The state/province and country. 
         Your job is to output the languages spoken there widely in the descending order. 
@@ -389,20 +393,15 @@ def hydrate_language_prompt(city:str, state: str, country: str):
 }
         No preceding sentences or succeeding sentences. Dont leave any notes at the end."""
 
-    }
-    return [user_prompt]
+    }]
+    return user_prompt
 
 
 @lru_cache(maxsize=128)
 def language_identification(prompts_hashable):
     try:
-        prompts = json.loads(prompts_hashable)  # convert back to original structure inside the function
-        response = ollama.chat(
-            model='llama3',
-            messages=prompts,
-            stream=False,
-        )
-        return json.loads(response['message']['content'])
+        response = llm_output(prompts_hashable , 100)
+        return tokenizer.decode(response, skip_special_tokens=True) 
     except Exception as e:
         raise RuntimeError("Failed to identify language due to an external API error: " + str(e))
 
@@ -469,7 +468,7 @@ def hydrate_network_prompt(search_item: str):
     }]
     return user_prompt
 
-
+@log_function_data
 @lru_cache(maxsize=128)
 def network_identification(prompts_hashable):
     try:
@@ -479,6 +478,7 @@ def network_identification(prompts_hashable):
         raise RuntimeError("Failed to identify network due to an error: " + str(e))
 
 # Convert input to a hashable type (string) before passing to function
+@log_function_data
 def call_network_identification(prompts: List[Dict[str, str]]) -> dict:
     prompts_hashable = json.dumps(prompts)  # convert list of dicts to a JSON string
     return network_identification(prompts_hashable)
