@@ -21,7 +21,7 @@ api_token = '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'
 
 login(api_token)
 
-model_id = "/code/llama3/"
+model_id = "meta-llama/Meta-Llama-3-8B"
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16,trust_remote_code=True)
