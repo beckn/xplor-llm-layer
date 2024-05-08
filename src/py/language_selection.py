@@ -1,7 +1,6 @@
 from .utils import *
 import json
 from typing import Dict, List
-from .utils import *
 
 def language_selection_service(city:str, state: str, country: str) -> dict:
     """
