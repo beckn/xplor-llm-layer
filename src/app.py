@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel, validator
 from typing import Dict, List, Union
 import subprocess
-from py.utils import *
+from .py.utils import *
 
 from .py.language_selection import language_selection_service, clear_cache_language_identification
 from .py.summarizer import text_summarize, clear_cache_text_summarize
