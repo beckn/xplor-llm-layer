@@ -21,8 +21,6 @@ RUN touch app.log
 RUN huggingface-cli login --token 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 &&  huggingface-cli download meta-llama/Meta-Llama-3-8B --local-dir /code/llama3
 
 RUN ls -lah /code/llama3
-RUN cd /code/llama3
-RUN pwd
 # Copy the source code to the working directory
 COPY ./src ./src
 

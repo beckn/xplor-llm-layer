@@ -21,7 +21,7 @@ api_token = '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'
 
 login(api_token)
 
-model_id = "../code/llama3/"
+model_id = "/code/llama3/"
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16,trust_remote_code=True)
@@ -46,7 +46,7 @@ print("model loaded")
 
 
 # Configure logging
-logging.basicConfig(filename='code/app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='/code/app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def log_function_data(func):
