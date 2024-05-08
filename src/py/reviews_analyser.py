@@ -1,4 +1,3 @@
-import ollama
 import json
 from typing import Dict, List
 from .utils import *

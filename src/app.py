@@ -1,4 +1,3 @@
-import ollama
 from fastapi import FastAPI, HTTPException
 import json
 from datetime import datetime
@@ -32,21 +31,7 @@ app = FastAPI(
 
 )
 
-# # Pull the llama2 model from the server
-command_to_serve = "ollama serve"
-# command_to_pull = "ollama pull llama3"
-#
-# Start the 'ollama serve' command in the background
-serve_process = subprocess.Popen(command_to_serve, shell=True)
-#
-# # Wait for a short period to ensure 'ollama serve' has started
-# time.sleep(5)
-#
-# # Execute 'ollama pull llama2'
-# pull_process = subprocess.Popen(command_to_pull, shell=True)
-#
-# # Wait for 'ollama pull llama2' to complete
-# pull_process.wait()
+
 
 current_datetime = datetime.now()
 
