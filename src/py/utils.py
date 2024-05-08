@@ -8,31 +8,34 @@ from datetime import datetime
 import pandas as pd
 from transformers import AutoTokenizer, AutoModelForCausalLM , BitsAndBytesConfig
 import torch
-from accelerate import disk_offload
+#from accelerate import disk_offload
 from huggingface_hub import login
 from functools import lru_cache, wraps
 import warnings
 from typing import Dict, List
 warnings.filterwarnings("ignore")
 
+print("logging into the huggingface")
 # Your Hugging Face API token
 api_token = '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'
 
 login(api_token)
 
-model_id = "meta-llama/Meta-Llama-3-8B"
+model_id = "../code/llama3/"
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16)
+model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16,trust_remote_code=True)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
 # Now you can use the model and tokenizer as needed
-#model.save_pretrained(r"/Users/sravanth_elovee/Desktop/xplor-summarizer/llama3/.")
-#tokenizer.save_pretrained(r"/Users/sravanth_elovee/Desktop/xplor-summarizer/llama3/.")
+#model.save_pretrained(r"/Users/sravanth_elovee/Desktop/xplor-summarizer/phi2/.")
+#tokenizer.save_pretrained(r"/Users/sravanth_elovee/Desktop/xplor-summarizer/phi2/.")
 #disk_offload(model=model, offload_dir="offload")
 
+print(model)
+print("model loaded")
 
 #############################################################################################################
 #############################################################################################################
@@ -83,7 +86,7 @@ def log_function_data(func):
 #                                   UTILS FOR LLM Call                                                      #
 #############################################################################################################
 #############################################################################################################
-
+@log_function_data
 def llm_output(prompts_hashable, max_new_tokens_size ):
     input_ids = tokenizer.apply_chat_template(
         prompts_hashable,
@@ -469,7 +472,7 @@ def hydrate_network_prompt(search_item: str):
     }]
     return user_prompt
 
-
+@log_function_data
 @lru_cache(maxsize=128)
 def network_identification(prompts_hashable):
     try:
@@ -479,6 +482,7 @@ def network_identification(prompts_hashable):
         raise RuntimeError("Failed to identify network due to an error: " + str(e))
 
 # Convert input to a hashable type (string) before passing to function
+@log_function_data
 def call_network_identification(prompts: List[Dict[str, str]]) -> dict:
     prompts_hashable = json.dumps(prompts)  # convert list of dicts to a JSON string
     return network_identification(prompts_hashable)

@@ -1,4 +1,3 @@
-# Base image
 FROM python:3.11-slim
 
 # Set the working directory inside the container
@@ -8,12 +7,20 @@ WORKDIR /code
 COPY ./requirements.txt ./
 
 # Install git and curl
-RUN apt-get update && apt-get install git -y && apt-get install curl -y
+RUN apt-get update && apt-get install -y git curl
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN huggingface-cli login --token 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 && huggingface-cli download meta-llama/Meta-Llama-3-8B --include "*.safetensors" --include "*.json"
+# Create a directory for the model
+RUN mkdir llama3
+
+# Login to Hugging Face and download the model to the specified directory
+RUN huggingface-cli login --token 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 &&  huggingface-cli download meta-llama/Meta-Llama-3-8B --include "*.safetensors" --include "*.json" --local-dir /code/llama3
+
+RUN ls -lah /code/llama3
+RUN cd /code/llama3
+RUN pwd
 # Copy the source code to the working directory
 COPY ./src ./src
 
