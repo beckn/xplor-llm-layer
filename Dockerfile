@@ -26,4 +26,4 @@ RUN pwd
 COPY ./src ./src
 
 # Start the application using uvicorn
-CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn src.app:app --host 0.0.0.0 --port 8000 >> app.log 2>&1"]
