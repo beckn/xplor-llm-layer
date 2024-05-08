@@ -35,6 +35,7 @@ model.to(device)
 #disk_offload(model=model, offload_dir="offload")
 
 print(model)
+print(tokenizer)
 print("model loaded")
 
 #############################################################################################################
@@ -45,7 +46,7 @@ print("model loaded")
 
 
 # Configure logging
-logging.basicConfig(filename='../app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='code/app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def log_function_data(func):
@@ -368,7 +369,7 @@ def call_analyse(prompts: List[Dict[str, str]]) -> str:
 #prompt = hydrate_summary_prompt(content_text, 30, 'course')
 #print(prompt)
 def hydrate_language_prompt(city:str, state: str, country: str):
-    user_prompt = {
+    user_prompt = [{"role": "system", "content": "You are an expert in detecting the language based on the location details."},{
         'role': 'user',
         'content': f""" you are an language detector. you will be given two inputs. The state/province and country. 
         Your job is to output the languages spoken there widely in the descending order. 
@@ -392,20 +393,15 @@ def hydrate_language_prompt(city:str, state: str, country: str):
 }
         No preceding sentences or succeeding sentences. Dont leave any notes at the end."""
 
-    }
-    return [user_prompt]
+    }]
+    return user_prompt
 
 
 @lru_cache(maxsize=128)
 def language_identification(prompts_hashable):
     try:
-        prompts = json.loads(prompts_hashable)  # convert back to original structure inside the function
-        response = ollama.chat(
-            model='llama3',
-            messages=prompts,
-            stream=False,
-        )
-        return json.loads(response['message']['content'])
+        response = llm_output(prompts_hashable , 100)
+        return tokenizer.decode(response, skip_special_tokens=True) 
     except Exception as e:
         raise RuntimeError("Failed to identify language due to an external API error: " + str(e))
 
