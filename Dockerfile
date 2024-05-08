@@ -9,6 +9,7 @@ COPY ./requirements.txt ./
 # Install git and curl
 RUN apt-get update && apt-get install -y git curl
 
+RUN df -h
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
