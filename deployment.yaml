@@ -103,8 +103,8 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   labels:
-    app: fast-autoscaling
-  name: fast-autoscaling
+    app: fast-api-autoscaling
+  name: fast-api-autoscaling
   namespace: dev-llm
 spec:
   maxReplicas: 1
