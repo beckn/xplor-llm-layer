@@ -3,24 +3,74 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: dev-llm-backend
-  name: dev-llm-backend
+    app: fast-api-backend
+  name: fast-api-backend
   namespace: dev-llm
 spec:
   selector:
     matchLabels:
-      app: dev-llm-backend
+      app: fast-api-backend
   template:
     metadata:
       labels:
-        app: dev-llm-backend
+        app: fast-api-backend
     spec:
       nodeSelector:
         node: gpu-node-pool
       containers:
       - image: asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/xplor-llm-services:latest
         imagePullPolicy: Always
-        name: dev-llm-backend
+        name: fast-api-backend
+        resources:
+          requests:
+            cpu: "2000m"
+            memory: "13000Mi"
+          limits:
+            cpu: "2000m" 
+            memory: "13000Mi"
+        ports:
+        - containerPort: 8000
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthcheck
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /healthcheck
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 10
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ollama-backend
+  name: ollama-backend
+  namespace: dev-llm
+spec:
+  selector:
+    matchLabels:
+      app: ollama-backend
+  template:
+    metadata:
+      labels:
+        app: ollama-backend
+    spec:
+      nodeSelector:
+        node: gpu-node-pool
+      containers:
+      - image: asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/xplor-llm-services:latest
+        imagePullPolicy: Always
+        name: ollama-backend
         resources:
           requests:
             cpu: "2000m"
@@ -53,8 +103,8 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   labels:
-    app: llm-autoscaling
-  name: llm-autoscaling
+    app: fast-autoscaling
+  name: fast-autoscaling
   namespace: dev-llm
 spec:
   maxReplicas: 1
@@ -62,7 +112,30 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: dev-llm-backend
+    name: fast-api-backend
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  labels:
+    app: ollama-autoscaling
+  name: ollama-autoscaling
+  namespace: dev-llm
+spec:
+  maxReplicas: 1
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ollama-backend
   metrics:
   - type: Resource
     resource:
@@ -76,8 +149,8 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: dev-llm-backend
-  name: llm-svc
+    app: fast-api-backend
+  name: fast-api-svc
   namespace: dev-llm
 spec:
   ports:
@@ -85,5 +158,22 @@ spec:
     targetPort: 8000
     protocol: TCP
   selector:
-    app: dev-llm-backend
+    app: fast-api-backend
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ollama-backend
+  name: ollama-svc
+  namespace: dev-llm
+spec:
+  ports:
+  - port: 5000
+    targetPort: 8000
+    protocol: TCP
+  selector:
+    app: ollama-backend
   type: NodePort
