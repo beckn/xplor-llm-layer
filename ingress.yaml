@@ -9,10 +9,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - "llm-dev.thewitslab.com"
+    - "fastapi-backend.thewitslab.com"
     secretName: "tls-secret"
   rules:
-  - host: "llm-dev.thewitslab.com"
+  - host: "fastapi-backend.thewitslab.com"
     http:
       paths:
       - path: "/*"
@@ -21,4 +21,4 @@ spec:
           service:
             name: "fast-api-svc"
             port:
-              number: 5000
+              number: 8000
