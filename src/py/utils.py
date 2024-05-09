@@ -4,39 +4,13 @@
 import json
 import logging
 import time
+import requests
 from datetime import datetime
 import pandas as pd
-from transformers import AutoTokenizer, AutoModelForCausalLM , BitsAndBytesConfig
-import torch
-#from accelerate import disk_offload
-from huggingface_hub import login
 from functools import lru_cache, wraps
 import warnings
 from typing import Dict, List
 warnings.filterwarnings("ignore")
-
-print("logging into the huggingface")
-# Your Hugging Face API token
-api_token = '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'
-
-login(api_token)
-
-model_id = "meta-llama/Meta-Llama-3-8B"
-
-tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.bfloat16,trust_remote_code=True)
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
-
-# Now you can use the model and tokenizer as needed
-#model.save_pretrained(r"/Users/sravanth_elovee/Desktop/xplor-summarizer/phi2/.")
-#tokenizer.save_pretrained(r"/Users/sravanth_elovee/Desktop/xplor-summarizer/phi2/.")
-#disk_offload(model=model, offload_dir="offload")
-
-print(model)
-print(tokenizer)
-print("model loaded")
 
 #############################################################################################################
 #############################################################################################################
@@ -46,7 +20,7 @@ print("model loaded")
 
 
 # Configure logging
-logging.basicConfig(filename='/code/app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def log_function_data(func):
@@ -88,24 +62,21 @@ def log_function_data(func):
 #############################################################################################################
 #############################################################################################################
 @log_function_data
-def llm_output(prompts_hashable, max_new_tokens_size ):
-    input_ids = tokenizer.apply_chat_template(
-        prompts_hashable,
-        add_generation_prompt=True,
-        return_tensors="pt"
-        ).to(model.device)
-    terminators = [
-            tokenizer.eos_token_id,
-            tokenizer.convert_tokens_to_ids("<|eot_id|>")
-            ]
-    outputs = model.generate(
-            input_ids,
-            max_new_tokens=max_new_tokens_size,
-            eos_token_id=terminators,
-            do_sample=True,
-            temperature=0.001,
-        )
-    return outputs[0][input_ids.shape[-1]:]
+def llm_output(prompt ):
+    url = 'http://localhost:11434/api/generate'
+    data = {
+    "model": "llama3",
+    "prompt": prompt,
+    "stream": False,
+        }
+
+    # Make the POST request with JSON data
+    response_ = requests.post(url, json=data)
+    if response_.status_code == 200:
+        return response_.json().get('response')
+    else:
+        logging.info(f" Failed to retrieve data, status code:", response_.status_code )
+
 
 
 
@@ -173,16 +144,6 @@ def calculate_summary_length(text_length):
 #############################################################################################################
 
 
-'''
-
-in any other py file apart from app.py. Make it so that its just a text input. We use data classes for api classes more. 
-
-For now just keep str input in two .py files and use a class in app.py
-
-
-'''
-
-
 def hydrate_summary_prompt(text: str, sum_length: int, content_type: str):
     """
     Generates a customized summarization prompt based on the type of content.
@@ -203,9 +164,7 @@ def hydrate_summary_prompt(text: str, sum_length: int, content_type: str):
         'course': "Your task is to summarize this online course description. Highlight the main learning objectives, course outline, and target audience.",
         'scholarship': "Your task is to summarize the scholarship details. Include important eligibility criteria, scholarship benefits, and application deadlines."
     }
-    user_prompt = {
-        'role': 'user',
-        'content': f"""You are an expert summarizer capable of understanding the content and summarizing aptly, keeping most valid information intact.
+    user_prompt =  f"""You are an expert summarizer capable of understanding the content and summarizing aptly, keeping most valid information intact.
                    Develop a summarizer that efficiently condenses the text into a concise summary. 
                    The summaries should capture essential information and convey the main points clearly and accurately. 
                    The summarizer must be able to handle content related to {content_type}s. 
@@ -217,10 +176,10 @@ def hydrate_summary_prompt(text: str, sum_length: int, content_type: str):
                    Provide just the summary nothing else. No preceeding sentences or succeeding sentences.
                    Dont leave any notes at the end that this is a summary.
                    """
-    }
-    return [user_prompt]
+    
+    return user_prompt
 
-
+@log_function_data
 @lru_cache(maxsize=128)
 def summarize(prompts_hashable: str) -> str:
     """
@@ -233,19 +192,13 @@ def summarize(prompts_hashable: str) -> str:
     str: The summarized text.
     """
     try:
-        prompts = json.loads(prompts_hashable)  # Convert JSON string back to list of dictionaries
-        response = ollama.chat(
-            model='llama3',
-            messages=prompts,
-            stream=False,
-        )
-        return response['message']['content']
+        return llm_output(prompts_hashable )
     except Exception as e:
         raise RuntimeError("Failed to generate summary due to an external API error: " + str(e))
 
 # Helper function to convert prompts to hashable type and call the cached function
-def call_summarize(prompts: List[Dict[str, str]]) -> str:
-    prompts_hashable = json.dumps(prompts)  # Convert list of dicts to a JSON string
+def call_summarize(prompts: str) -> str:
+    prompts_hashable = prompts  
     return summarize(prompts_hashable)
 
 #summarize("""  To make it easy for you to get started with GitLab, here's a list of recommended next steps.  """)
@@ -307,9 +260,7 @@ def process_text(input_text: str):
 
 
 def hydrate_review_analyser_prompt(text: str):
-    user_prompt = {
-        'role': 'user',
-        'content': f"""You are an advanced language model specifically trained for deep text analysis and synthesis. 
+    user_prompt = f"""You are an advanced language model specifically trained for deep text analysis and synthesis. 
                 Your primary function today is to assess a range of customer reviews for a given product, extracting pivotal sentiments, pinpointing common concerns, and identifying frequent praises. 
                 Your ultimate goal is to condense these findings into a singular, well-crafted summary that encapsulates the overall consumer experience with the product. 
                 This summary should remain unbiased, objective, and focus strictly on the product features, overall quality, and user satisfaction.
@@ -327,9 +278,9 @@ def hydrate_review_analyser_prompt(text: str):
                 {text}
                 Generate just a Summary. Dont include anything else. 
                    """
-    }
-    return [user_prompt]
+    return user_prompt
 
+@log_function_data
 @lru_cache(maxsize=128)
 def analyse(prompts_hashable: str) -> str:
     """
@@ -342,19 +293,13 @@ def analyse(prompts_hashable: str) -> str:
     str: The summarized text.
     """
     try:
-        prompts = json.loads(prompts_hashable)  # Convert JSON string back to list of dictionaries
-        response = ollama.chat(
-            model='llama3',
-            messages=prompts,
-            stream=False,
-        )
-        return response['message']['content']
+        return llm_output(prompts_hashable )
     except Exception as e:
         raise RuntimeError("Failed to generate review due to an external API error: " + str(e))
 
 # Helper function to convert prompts to hashable type and call the cached function
-def call_analyse(prompts: List[Dict[str, str]]) -> str:
-    prompts_hashable = json.dumps(prompts)  # Convert list of dicts to a JSON string
+def call_analyse(prompts: str) -> str:
+    prompts_hashable = (prompts)  
     return analyse(prompts_hashable)
 
 #############################################################################################################
@@ -369,45 +314,41 @@ def call_analyse(prompts: List[Dict[str, str]]) -> str:
 #prompt = hydrate_summary_prompt(content_text, 30, 'course')
 #print(prompt)
 def hydrate_language_prompt(city:str, state: str, country: str):
-    user_prompt = [{"role": "system", "content": "You are an expert in detecting the language based on the location details."},{
-        'role': 'user',
-        'content': f""" you are an language detector. you will be given two inputs. The state/province and country. 
+    user_prompt =  f""" you are an language detector. you will be given two inputs. The state/province and country. 
         Your job is to output the languages spoken there widely in the descending order. 
         The city/ town is {city} ,state/province is {state} in the country of {country}. 
         Give me the List of language spoken there. 
         The output should be returned in json format with just two keys - language, percentage with % sign in descending order of usagae. 
         Example of Format:
-{
-    {
+{{
+    {{
       "language": "Hindi",
       "percentage": "89%"
-    },
-    {
+    }},
+    {{
       "language": "English",
       "percentage": "8.1%"
-    },
-    {
+    }},
+    {{
       "language": "Punjabi",
       "percentage": "2.4%"
-    }
-}
+    }}
+}}
         No preceding sentences or succeeding sentences. Dont leave any notes at the end."""
 
-    }]
     return user_prompt
 
-
+@log_function_data
 @lru_cache(maxsize=128)
 def language_identification(prompts_hashable):
     try:
-        response = llm_output(prompts_hashable , 100)
-        return tokenizer.decode(response, skip_special_tokens=True) 
+        return llm_output(prompts_hashable )
     except Exception as e:
         raise RuntimeError("Failed to identify language due to an external API error: " + str(e))
 
 # Convert input to a hashable type (string) before passing to function
-def call_language_identification(prompts: List[Dict[str, str]]) -> dict:
-    prompts_hashable = json.dumps(prompts)  # convert list of dicts to a JSON string
+def call_language_identification(prompts: str) -> dict:
+    prompts_hashable = (prompts)  # convert list of dicts to a JSON string
     return language_identification(prompts_hashable)
 
 
@@ -419,10 +360,7 @@ def call_language_identification(prompts: List[Dict[str, str]]) -> dict:
 #############################################################################################################
 
 def hydrate_network_prompt(search_item: str):
-    user_prompt = [{"role": "system", "content": "You are a classifier who can classify the term searched to apt network."},
-        {
-        'role': 'user',
-        'content': f""" 
+    user_prompt =f""" 
         You are tasked with determining the most suitable network for a given search query based on predefined categories associated with each network. 
         A network is basically a system which can provide few services. Example ONDC can have retail or ecommerce services. 
         Example : Tooth paste or food delivery or restaurant or shoes or clothes 
@@ -465,20 +403,18 @@ def hydrate_network_prompt(search_item: str):
         The input query is : {search_item}
         """
 
-    }]
     return user_prompt
 
 @log_function_data
 @lru_cache(maxsize=128)
 def network_identification(prompts_hashable):
     try:
-        response = llm_output(prompts_hashable , 100)
-        return tokenizer.decode(response, skip_special_tokens=True) 
+        return llm_output(prompts_hashable )
     except Exception as e:
         raise RuntimeError("Failed to identify network due to an error: " + str(e))
 
 # Convert input to a hashable type (string) before passing to function
 @log_function_data
-def call_network_identification(prompts: List[Dict[str, str]]) -> dict:
-    prompts_hashable = json.dumps(prompts)  # convert list of dicts to a JSON string
+def call_network_identification(prompts: str) -> dict:
+    prompts_hashable = (prompts)  # convert list of dicts to a JSON string
     return network_identification(prompts_hashable)
