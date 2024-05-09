@@ -63,19 +63,29 @@ def log_function_data(func):
 #############################################################################################################
 @log_function_data
 def llm_output(prompt ):
+    json_lines = []
+    output = []
     url = 'https://ollama-backend.thewitslab.com/api/generate'
     data = {
     "model": "llama3",
     "prompt": prompt,
-    "stream": False,
+    "options": {
+    "seed": 123,
+    "temperature": 0.001
+  }
         }
-
     # Make the POST request with JSON data
-    response_ = requests.post(url, json=data)
-    if response_.status_code == 200:
-        return response_.json().get('response')
-    else:
-        logging.info(f" Failed to retrieve data, status code:", response_.status_code )
+    response_ = requests.post(url, json=data, stream= True)
+    response_.raise_for_status()
+    for line in response_.iter_lines():
+        json_lines.append(line)
+    json_lines = json_lines[0:-1]
+    for i in json_lines:
+        body = json.loads(i)
+        output.append(body.get('response', ''))
+    return "".join(output)
+
+
 
 
 
