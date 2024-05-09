@@ -34,10 +34,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - "fastapi-backend.thewitslab.com"
+    - "ollama-backend.thewitslab.com"
     secretName: "tls-secret"
   rules:
-  - host: "fastapi-backend.thewitslab.com"
+  - host: "ollama-backend.thewitslab.com"
     http:
       paths:
       - path: "/*"
@@ -46,4 +46,4 @@ spec:
           service:
             name: "fast-api-svc"
             port:
-              number: 8000              
+              number: 11434 
