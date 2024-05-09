@@ -63,7 +63,7 @@ def log_function_data(func):
 #############################################################################################################
 @log_function_data
 def llm_output(prompt ):
-    url = 'http://localhost:11434/api/generate'
+    url = 'https://ollama-backend.thewitslab.com/api/generate'
     data = {
     "model": "llama3",
     "prompt": prompt,
