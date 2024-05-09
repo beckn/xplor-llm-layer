@@ -3,24 +3,24 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: fast-api-backend
-  name: fast-api-backend
+    app: dev-fast-api-backend
+  name: dev-fast-api-backend
   namespace: dev-llm
 spec:
   selector:
     matchLabels:
-      app: fast-api-backend
+      app: dev-fast-api-backend
   template:
     metadata:
       labels:
-        app: fast-api-backend
+        app: dev-fast-api-backend
     spec:
       nodeSelector:
         node: gpu-node-pool
       containers:
       - image: asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/xplor-llm-services:latest
         imagePullPolicy: Always
-        name: fast-api-backend
+        name: dev-fast-api-backend
         resources:
           requests:
             cpu: "2000m"
@@ -53,24 +53,24 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: ollama-backend
-  name: ollama-backend
+    app: dev-ollama-backend
+  name: dev-ollama-backend
   namespace: dev-llm
 spec:
   selector:
     matchLabels:
-      app: ollama-backend
+      app: dev-ollama-backend
   template:
     metadata:
       labels:
-        app: ollama-backend
+        app: dev-ollama-backend
     spec:
       nodeSelector:
         node: gpu-node-pool
       containers:
       - image: asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/xplor-llm-services:latest
         imagePullPolicy: Always
-        name: ollama-backend
+        name: dev-ollama-backend
         resources:
           requests:
             cpu: "2000m"
@@ -112,7 +112,7 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: fast-api-backend
+    name: dev-fast-api-backend
   metrics:
   - type: Resource
     resource:
@@ -135,7 +135,7 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: ollama-backend
+    name: dev-ollama-backend
   metrics:
   - type: Resource
     resource:
@@ -149,7 +149,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: fast-api-backend
+    app: dev-fast-api-backend
   name: fast-api-svc
   namespace: dev-llm
 spec:
@@ -158,7 +158,7 @@ spec:
     targetPort: 8000
     protocol: TCP
   selector:
-    app: fast-api-backend
+    app: dev-fast-api-backend
   type: NodePort
 
 ---
@@ -166,7 +166,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: ollama-backend
+    app: dev-ollama-backend
   name: ollama-svc
   namespace: dev-llm
 spec:
@@ -175,5 +175,5 @@ spec:
     targetPort: 8000
     protocol: TCP
   selector:
-    app: ollama-backend
+    app: dev-ollama-backend
   type: NodePort
