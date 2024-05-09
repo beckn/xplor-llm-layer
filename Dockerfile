@@ -1,11 +1,13 @@
 FROM ollama/ollama
 
-COPY ./run-ollama.sh /tmp/run-ollama.sh
+
+
+COPY ./run_ollama.sh /tmp/run_ollama.sh
 
 WORKDIR /tmp
 
-RUN chmod +x run-ollama.sh \
-    && ./run-ollama.sh
+RUN chmod +x run_ollama.sh \
+    && ./run_ollama.sh
 
 EXPOSE 11434
 
