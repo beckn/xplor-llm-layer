@@ -1,83 +1,34 @@
+## Fast-API
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: dev-fast-api-backend
-  name: dev-fast-api-backend
+    app: dev-fastapi-backend
+  name: dev-fastapi-backend
   namespace: dev-llm
 spec:
   selector:
     matchLabels:
-      app: dev-fast-api-backend
+      app: dev-fastapi-backend
   template:
     metadata:
       labels:
-        app: dev-fast-api-backend
+        app: dev-fastapi-backend
     spec:
       nodeSelector:
         node: gpu-node-pool
       containers:
-      - image: asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/xplor-llm-services:latest
+      - image: asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/fast-api:latest
         imagePullPolicy: Always
-        name: dev-fast-api-backend
+        name: dev-fastapi-backend
         resources:
           requests:
-            cpu: "2000m"
-            memory: "13000Mi"
+            cpu: "200m"
+            memory: "500Mi"
           limits:
-            cpu: "2000m" 
-            memory: "13000Mi"
-        ports:
-        - containerPort: 8000
-          protocol: TCP
-        livenessProbe:
-          httpGet:
-            path: /healthcheck
-            port: 8000
-          initialDelaySeconds: 15
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /healthcheck
-            port: 8000
-          initialDelaySeconds: 20
-          periodSeconds: 10
-      tolerations:
-      - key: "nvidia.com/gpu"
-        operator: "Exists"
-        effect: "NoSchedule"
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: dev-ollama-backend
-  name: dev-ollama-backend
-  namespace: dev-llm
-spec:
-  selector:
-    matchLabels:
-      app: dev-ollama-backend
-  template:
-    metadata:
-      labels:
-        app: dev-ollama-backend
-    spec:
-      nodeSelector:
-        node: gpu-node-pool
-      containers:
-      - image: asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/xplor-llm-services:latest
-        imagePullPolicy: Always
-        name: dev-ollama-backend
-        resources:
-          requests:
-            cpu: "2000m"
-            memory: "13000Mi"
-          limits:
-            cpu: "2000m" 
-            memory: "13000Mi"
+            cpu: "400m" 
+            memory: "1000Mi"
         ports:
         - containerPort: 8000
           protocol: TCP
@@ -103,8 +54,8 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   labels:
-    app: fast-api-autoscaling
-  name: fast-api-autoscaling
+    app: fastapi-autoscaling
+  name: fastapi-autoscaling
   namespace: dev-llm
 spec:
   maxReplicas: 1
@@ -112,7 +63,7 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: dev-fast-api-backend
+    name: dev-fastapi-backend
   metrics:
   - type: Resource
     resource:
@@ -120,6 +71,75 @@ spec:
       target:
         type: Utilization
         averageUtilization: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dev-fastapi-backend
+  name: fastapi-svc
+  namespace: dev-llm
+spec:
+  ports:
+  - port: 5000
+    targetPort: 8000
+    protocol: TCP
+  selector:
+    app: dev-fastapi-backend
+  type: NodePort
+
+
+## Ollama
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dev-ollama-backend
+  name: dev-ollama-backend
+  namespace: dev-llm
+spec:
+  selector:
+    matchLabels:
+      app: dev-ollama-backend
+  template:
+    metadata:
+      labels:
+        app: dev-ollama-backend
+    spec:
+      nodeSelector:
+        node: gpu-node-pool
+      containers:
+      - image: asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/ollama:latest
+        imagePullPolicy: Always
+        name: dev-ollama-backend
+        resources:
+          requests:
+            cpu: "2000m"
+            memory: "16000Mi"
+          limits:
+            cpu: "2000m" 
+            memory: "16000Mi"
+        ports:
+        - containerPort: 11434
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 11434
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 11434
+          initialDelaySeconds: 20
+          periodSeconds: 10
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
 
 ---
 apiVersion: autoscaling/v2
@@ -149,30 +169,13 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: dev-fast-api-backend
-  name: fast-api-svc
-  namespace: dev-llm
-spec:
-  ports:
-  - port: 5000
-    targetPort: 8000
-    protocol: TCP
-  selector:
-    app: dev-fast-api-backend
-  type: NodePort
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
     app: dev-ollama-backend
   name: ollama-svc
   namespace: dev-llm
 spec:
   ports:
-  - port: 5000
-    targetPort: 8000
+  - port: 6000
+    targetPort: 11434
     protocol: TCP
   selector:
     app: dev-ollama-backend

@@ -10,6 +10,7 @@ spec:
   tls:
   - hosts:
     - "fastapi-backend.thewitslab.com"
+    - "ollama-backend.thewitslab.com"
     secretName: "tls-secret"
   rules:
   - host: "fastapi-backend.thewitslab.com"
@@ -19,24 +20,9 @@ spec:
         pathType: "ImplementationSpecific"
         backend:
           service:
-            name: "fast-api-svc"
+            name: "fastapi-svc"
             port:
-              number: 8000
-              
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: "dev-ollama-ingress"
-  namespace: "dev-llm"
-  annotations:
-    kubernetes.io/ingress.global-static-ip-name: "xplor-llm-ip"
-spec:
-  tls:
-  - hosts:
-    - "ollama-backend.thewitslab.com"
-    secretName: "tls-secret"
-  rules:
+              number: 5000
   - host: "ollama-backend.thewitslab.com"
     http:
       paths:
@@ -46,4 +32,4 @@ spec:
           service:
             name: "ollama-svc"
             port:
-              number: 11434 
+              number: 6000 

@@ -18,8 +18,7 @@ build:
     - echo "Image Tag for ollama - asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/ollama:$CI_COMMIT_SHORT_SHA"
     - docker image prune -af
 
-.deploy:
-  when: manual
+deploy:
   stage: deploy
   tags:
     - gcp
@@ -36,7 +35,8 @@ build:
     - sed "s/latest/${CI_COMMIT_SHORT_SHA}/g" deployment.yaml > deployment.tmp
     - mv deployment.tmp deployment.yaml
     - kubectl apply -f deployment.yaml
-    - echo -e "Dev LLM  Backend URL:- https://llm-dev.thewitslab.com/"
+    - echo -e "Dev Fast-API Backend URL:- https://llm-dev.thewitslab.com/"
+    - echo -e "Dev Ollama Backend URL:- https://ollama-backend.thewitslab.com/"
 
     ## Deploying 'ingress' in Namespace
     - kubectl apply -f ingress.yaml
