@@ -61,7 +61,7 @@ def log_function_data(func):
 #                                   UTILS FOR LLM Call                                                      #
 #############################################################################################################
 #############################################################################################################
-@log_function_data
+
 def llm_output(prompt ):
     json_lines = []
     output = []
@@ -190,7 +190,6 @@ def hydrate_summary_prompt(text: str, sum_length: int, content_type: str):
     return user_prompt
 
 @log_function_data
-@lru_cache(maxsize=128)
 def summarize(prompts_hashable: str) -> str:
     """
     Calls an external API or model to generate a summary based on the given prompts.
@@ -291,7 +290,6 @@ def hydrate_review_analyser_prompt(text: str):
     return user_prompt
 
 @log_function_data
-@lru_cache(maxsize=128)
 def analyse(prompts_hashable: str) -> str:
     """
     Calls an external API or model to generate a summary based on the given prompts.
@@ -416,7 +414,6 @@ def hydrate_network_prompt(search_item: str):
     return user_prompt
 
 @log_function_data
-@lru_cache(maxsize=128)
 def network_identification(prompts_hashable):
     try:
         return llm_output(prompts_hashable )
