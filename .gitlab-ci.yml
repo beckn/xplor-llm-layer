@@ -9,12 +9,17 @@ build:
   only:
     - gcp_dev
   script:
-    - docker build --platform=linux/amd64 --pull -t "asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/xplor-llm-services:$CI_COMMIT_SHORT_SHA" .
-    - docker push asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/xplor-llm-services:$CI_COMMIT_SHORT_SHA
+    - docker build --platform=linux/amd64 --pull -t "asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/fast-api:$CI_COMMIT_SHORT_SHA" .
+    - docker push asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/fast-api:$CI_COMMIT_SHORT_SHA
+    - Path=$(pwd) && cd $Path/ollama
+    - docker build --platform=linux/amd64 --pull -t "asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/ollama:$CI_COMMIT_SHORT_SHA" .
+    - docker push asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/ollama:$CI_COMMIT_SHORT_SHA  
+    - echo "Image Tag for fast-api - asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/fast-api:$CI_COMMIT_SHORT_SHA"
+    - echo "Image Tag for ollama - asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/ollama:$CI_COMMIT_SHORT_SHA"
     - docker image prune -af
-    - echo "Image Tag- asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/xplor-llm-services:$CI_COMMIT_SHORT_SHA"
 
-deploy:
+.deploy:
+  when: manual
   stage: deploy
   tags:
     - gcp
