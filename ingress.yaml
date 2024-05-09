@@ -44,6 +44,6 @@ spec:
         pathType: "ImplementationSpecific"
         backend:
           service:
-            name: "fast-api-svc"
+            name: "ollama-svc"
             port:
               number: 11434 
