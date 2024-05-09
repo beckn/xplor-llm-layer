@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: "dev-llm-ingress"
+  name: "dev-fast-api-ingress"
   namespace: "dev-llm"
   annotations:
     kubernetes.io/ingress.global-static-ip-name: "xplor-llm-ip"
@@ -19,6 +19,6 @@ spec:
         pathType: "ImplementationSpecific"
         backend:
           service:
-            name: "llm-svc"
+            name: "fast-api-svc"
             port:
               number: 5000
