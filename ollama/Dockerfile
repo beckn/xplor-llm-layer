@@ -1,5 +1,7 @@
 FROM ollama/ollama
-
-RUN curl localhost:11434
+EXPOSE 11434
+RUN ollama serve & 
+RUN sleep 40
 RUN ollama list
 RUN ollama pull llama3
+CMD ["serve"]

@@ -9,20 +9,13 @@ COPY ./requirements.txt ./
 # Install git and curl
 RUN apt-get update && apt-get install -y git curl
 
-RUN df -h
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Create a directory for the model
-RUN mkdir llama3
 RUN touch app.log
 
-# Login to Hugging Face and download the model to the specified directory
-#RUN huggingface-cli login --token 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 &&  huggingface-cli download meta-llama/Meta-Llama-3-8B --local-dir /code/llama3
-
-RUN ls -lah /code/llama3
 # Copy the source code to the working directory
 COPY ./src ./src
 
 # Start the application using uvicorn
-CMD ["sh", "-c", "uvicorn src.app:app --host 0.0.0.0 --port 8000 >> app.log 2>&1"]
+CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "8000"]
