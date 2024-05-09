@@ -1,8 +1,9 @@
 FROM ollama/ollama
 
-RUN apt-get update && apt-get install -y git curl
+EXPOSE 11434
+RUN /bin/ollama serve & 
 
-RUN curl localhost:11434
-RUN ollama list
-RUN ollama pull llama3
+RUN sleep 15
+RUN /bin/ollama list
+RUN /bin/ollama pull llama3
 
