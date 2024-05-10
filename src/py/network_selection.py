@@ -2,7 +2,7 @@ import json
 from typing import Dict, List
 from .utils import *
 
-
+@log_function_data
 def network_selection_service(search_item :str) -> dict:
     """
      Identifies the network based on the given search item.
@@ -23,7 +23,7 @@ def network_selection_service(search_item :str) -> dict:
 
     return network_identified
 
-
+@log_function_data
 def clear_cache_network_identification():
     network_identification.cache_clear()
     return True

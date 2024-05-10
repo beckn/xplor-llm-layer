@@ -2,7 +2,7 @@ import json
 from typing import Dict, List
 from .utils import *
 
-
+@log_function_data
 def text_summarize(text: str, content_type: str) -> str:
     """
     Summarizes the provided text based on the specified content type.
@@ -35,7 +35,7 @@ def text_summarize(text: str, content_type: str) -> str:
     summary = call_summarize(prompts)
     return summary
 
-
+@log_function_data
 def clear_cache_text_summarize():
     summarize.cache_clear()
     return True

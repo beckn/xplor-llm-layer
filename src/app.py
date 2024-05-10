@@ -41,7 +41,6 @@ current_datetime = datetime.now()
 #                                   Health Check                                                                #
 #################################################################################################################
 
-
 @app.get("/healthcheck", tags=["Health Check"])
 def health_check():
     """
@@ -49,7 +48,6 @@ def health_check():
     """
 
     return {"status": "ok"}
-
 
 @app.get("/datecheck", tags=["Health Check"])
 def date_check():
@@ -73,21 +71,21 @@ async def clear_cache():
     language = clear_cache_language_identification()
     network = clear_cache_network_identification()
     if summary:
-        a = "Summary Cache Cleared"
+        a = "Summary Cache Cleared.  "
     else:
-        a = "Summary Cache Not Cleared"
+        a = "Summary Cache Not Cleared.  "
     if review:
-        b = "Review Cache Cleared"
+        b = "Review Cache Cleared.  "
     else:
-        b = "Review Cache Not Cleared"
+        b = "Review Cache Not Cleared.  "
     if language:
-        c = "Language Cache Cleared"
+        c = "Language Cache Cleared.  "
     else:
-        c = "Language Cache Not Cleared"
+        c = "Language Cache Not Cleared.  "
     if network:
-        d = "Network Cache Cleared"
+        d = "Network Cache Cleared.  "
     else:
-        d = "Network Cache Not Cleared"
+        d = "Network Cache Not Cleared.  "
     return {"status": a + b + c + d }
 
 
@@ -165,7 +163,6 @@ else:
 class ReviewAnalyser(BaseModel):
     reviews: Union[str, List[str]]
 
-
 @app.post('/review_analysis', tags=["Review Analyser"])
 async def create_review_analyser(input_data: ReviewAnalyser):
     try:
@@ -193,7 +190,6 @@ async def create_review_analyser(input_data: ReviewAnalyser):
 #################################################################################################################
 
 class LocationRequest(BaseModel):
-    city : str
     state: str
     country: str
 
@@ -202,8 +198,8 @@ class LocationRequest(BaseModel):
 async def language_selection(request: LocationRequest):
     try:
         # Use the utility function to summarize the text
-        language = language_selection_service(request.city, request.state, request.country)
-        return {"languages": language}
+        language = language_selection_service(request.state, request.country)
+        return language
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except TypeError as e:
@@ -219,7 +215,6 @@ async def language_selection(request: LocationRequest):
 
 class NetworkRequest(BaseModel):
     search_item : str
-
 
 @app.post('/network_selection', tags=['Search Based Network Selection'])
 async def network_selection(request: NetworkRequest):

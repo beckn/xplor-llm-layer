@@ -2,6 +2,7 @@ import json
 from typing import Dict, List
 from .utils import *
 
+@log_function_data
 def review_analyser(text: str) -> str:
     if not isinstance(text, str):
         raise TypeError("Input text must be a string.")
@@ -13,6 +14,7 @@ def review_analyser(text: str) -> str:
     summary = call_analyse(prompts)
     return summary
 
+@log_function_data
 def clear_cache_review_analyser():
     analyse.cache_clear()
     return True

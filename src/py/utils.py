@@ -47,14 +47,6 @@ def log_function_data(func):
 
 # Example usage of the decorator
 #@log_function_data
-#def sample_function(a, b):
-#    """Example function that adds two numbers."""
-#    return a + b
-
-# Call the decorated function
-#result = sample_function(5, 7)
-
-
 
 #############################################################################################################
 #############################################################################################################
@@ -62,7 +54,7 @@ def log_function_data(func):
 #############################################################################################################
 #############################################################################################################
 
-def llm_output(prompt ):
+def llm_output_stream(prompt ):
     json_lines = []
     output = []
     url = 'https://ollama-backend.thewitslab.com/api/generate'
@@ -86,6 +78,20 @@ def llm_output(prompt ):
     return "".join(output)
 
 
+def llm_output_batch(prompt ):
+    url = 'https://ollama-backend.thewitslab.com/api/generate'
+    data = {
+    "model": "llama3",
+    "prompt": prompt,
+    "stream": False,
+    "options":{"penalize_newline": True}
+        }
+    # Make the POST request with JSON data
+    response_ = requests.post(url, json=data)
+    if response_.status_code == 200:
+        return json.loads(response_.json().get('response'))
+    else:
+        logging.info(f" Failed to retrieve data, status code:", response_.status_code )
 
 
 
@@ -189,7 +195,8 @@ def hydrate_summary_prompt(text: str, sum_length: int, content_type: str):
     
     return user_prompt
 
-@log_function_data
+
+@lru_cache(maxsize=128)
 def summarize(prompts_hashable: str) -> str:
     """
     Calls an external API or model to generate a summary based on the given prompts.
@@ -201,7 +208,7 @@ def summarize(prompts_hashable: str) -> str:
     str: The summarized text.
     """
     try:
-        return llm_output(prompts_hashable )
+        return llm_output_stream(prompts_hashable )
     except Exception as e:
         raise RuntimeError("Failed to generate summary due to an external API error: " + str(e))
 
@@ -289,7 +296,7 @@ def hydrate_review_analyser_prompt(text: str):
                    """
     return user_prompt
 
-@log_function_data
+@lru_cache(maxsize=128)
 def analyse(prompts_hashable: str) -> str:
     """
     Calls an external API or model to generate a summary based on the given prompts.
@@ -301,7 +308,7 @@ def analyse(prompts_hashable: str) -> str:
     str: The summarized text.
     """
     try:
-        return llm_output(prompts_hashable )
+        return llm_output_stream(prompts_hashable )
     except Exception as e:
         raise RuntimeError("Failed to generate review due to an external API error: " + str(e))
 
@@ -321,10 +328,10 @@ def call_analyse(prompts: str) -> str:
 #content_text = "This course offers an in-depth exploration of modern data sciences, covering key concepts, applications, and tools. It is ideal for professionals seeking to enhance their understanding of data analysis and machine learning."
 #prompt = hydrate_summary_prompt(content_text, 30, 'course')
 #print(prompt)
-def hydrate_language_prompt(city:str, state: str, country: str):
+def hydrate_language_prompt(state: str, country: str):
     user_prompt =  f""" you are an language detector. you will be given two inputs. The state/province and country. 
         Your job is to output the languages spoken there widely in the descending order. 
-        The city/ town is {city} ,state/province is {state} in the country of {country}. 
+        State/province is {state} in the country of {country}. 
         Give me the List of language spoken there. 
         The output should be returned in json format with just two keys - language, percentage with % sign in descending order of usagae. 
         Example of Format:
@@ -346,11 +353,10 @@ def hydrate_language_prompt(city:str, state: str, country: str):
 
     return user_prompt
 
-@log_function_data
 @lru_cache(maxsize=128)
 def language_identification(prompts_hashable):
     try:
-        return llm_output(prompts_hashable )
+        return llm_output_batch(prompts_hashable )
     except Exception as e:
         raise RuntimeError("Failed to identify language due to an external API error: " + str(e))
 
@@ -413,15 +419,14 @@ def hydrate_network_prompt(search_item: str):
 
     return user_prompt
 
-@log_function_data
+@lru_cache(maxsize=128)
 def network_identification(prompts_hashable):
     try:
-        return llm_output(prompts_hashable )
+        return llm_output_batch(prompts_hashable )
     except Exception as e:
         raise RuntimeError("Failed to identify network due to an error: " + str(e))
 
 # Convert input to a hashable type (string) before passing to function
-@log_function_data
 def call_network_identification(prompts: str) -> dict:
     prompts_hashable = (prompts)  # convert list of dicts to a JSON string
     return network_identification(prompts_hashable)
