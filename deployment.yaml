@@ -110,6 +110,7 @@ spec:
     spec:
       nodeSelector:
         node: gpu-node-pool
+        cloud.google.com/gke-accelerator: nvidia-tesla-t4
       containers:
       - image: asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/ollama:latest
         imagePullPolicy: Always
@@ -118,9 +119,11 @@ spec:
           requests:
             cpu: "2000m"
             memory: "16000Mi"
+            nvidia.com/gpu: 2
           limits:
             cpu: "2000m" 
             memory: "16000Mi"
+            nvidia.com/gpu: 2
         ports:
         - containerPort: 11434
           protocol: TCP
