@@ -335,7 +335,7 @@ def hydrate_language_prompt(state: str, country: str):
         Give me the List of language spoken there. 
         The output should be returned in json format with just two keys - language, percentage with % sign in descending order of usagae. 
         Example of Format:
-{{
+[
     {{
       "language": "Hindi",
       "percentage": "89%"
@@ -348,7 +348,7 @@ def hydrate_language_prompt(state: str, country: str):
       "language": "Punjabi",
       "percentage": "2.4%"
     }}
-}}
+]
         No preceding sentences or succeeding sentences. Dont leave any notes at the end."""
 
     return user_prompt
