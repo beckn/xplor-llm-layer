@@ -87,7 +87,7 @@ def check_api_key( user_id: str, api_key: str) -> Dict[str, str]:
 
 
 # Route to generate API key dynamically
-@app.get("/generate-api-key/{user_id}",tags=["Authorisation"], include_in_schema=True)
+@app.get("/generate-api-key/{user_id}",tags=["Authorisation"], include_in_schema=False)
 async def generate_api_key_route(user_id: str):
     api_key = generate_api_key(user_id)
     return {"user_id": user_id, "api_key": api_key}
