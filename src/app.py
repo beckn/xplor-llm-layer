@@ -98,7 +98,8 @@ async def generate_api_key_route(user_id: str):
 #################################################################################################################
 
 @app.post("/clear_cache/", tags=["Health Check"])
-async def clear_cache( credentials: Dict[str, str] = Depends(check_api_key)):
+#async def clear_cache( credentials: Dict[str, str] = Depends(check_api_key)):
+async def clear_cache():
     summary = clear_cache_text_summarize()
     review = clear_cache_review_analyser()
     language = clear_cache_language_identification()
@@ -142,7 +143,8 @@ class SummaryRequest(BaseModel):
 
 
 @app.post('/summarise/', tags=["Summarise"])
-async def create_summary(request: SummaryRequest, credentials: Dict[str, str] = Depends(check_api_key)):
+#async def create_summary(request: SummaryRequest, credentials: Dict[str, str] = Depends(check_api_key)):
+async def create_summary(request: SummaryRequest):
     try:
         # Use the utility function to summarize the text
         summary = text_summarize(request.text, request.content_type)
@@ -197,7 +199,8 @@ class ReviewAnalyser(BaseModel):
     reviews: Union[str, List[str]]
 
 @app.post('/review_analysis', tags=["Review Analyser"])
-async def create_review_analyser(input_data: ReviewAnalyser, credentials: Dict[str, str] = Depends(check_api_key)):
+#async def create_review_analyser(input_data: ReviewAnalyser, credentials: Dict[str, str] = Depends(check_api_key)):
+async def create_review_analyser(input_data: ReviewAnalyser):
     try:
         # Convert input data to a single string
         if isinstance(input_data.reviews, list):
@@ -228,7 +231,8 @@ class LocationRequest(BaseModel):
 
 
 @app.post('/language_selection', tags=['Location Based language Selection'])
-async def language_selection(request: LocationRequest, credentials: Dict[str, str] = Depends(check_api_key)):
+#async def language_selection(request: LocationRequest, credentials: Dict[str, str] = Depends(check_api_key)):
+async def language_selection(request: LocationRequest):
     try:
         # Use the utility function to summarize the text
         language = language_selection_service(request.state, request.country)
@@ -250,7 +254,8 @@ class NetworkRequest(BaseModel):
     search_item : str
 
 @app.post('/network_selection', tags=['Search Based Network Selection'])
-async def network_selection(request: NetworkRequest, credentials: Dict[str, str] = Depends(check_api_key)):
+#async def network_selection(request: NetworkRequest, credentials: Dict[str, str] = Depends(check_api_key)):
+async def network_selection(request: NetworkRequest):
     try:
         # Use the utility function to summarize the text
         network = network_selection_service(request.search_item)
