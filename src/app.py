@@ -1,4 +1,8 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Security, Request
+from fastapi.security.api_key import APIKeyQuery, APIKeyHeader, APIKey
+
+from hashlib import sha256
+from typing import Dict
 import json
 from datetime import datetime
 from pydantic import BaseModel, validator
@@ -24,6 +28,7 @@ app = FastAPI(
     redoc_url="/redocs",
     openapi_url="/api/v1/openapi.json",
     openapi_tags=[{"name": "Health Check", "description": "Healthcheck operations"},
+                  #{"name": "Authorisation", "description": "Authorisation Operations"},
                   {"name": "Summarise", "description": "Summarisation operations"},
                   {"name": "Review Analyser", "description": "Review Analyse operations"},
                   {"name": "Location Based language Selection", "description": "Language Selection operations"},
@@ -35,8 +40,8 @@ app = FastAPI(
 
 
 current_datetime = datetime.now()
-
-
+# Define your private key (keep it secret)
+PRIVATE_KEY = "da98faf9sf3qF0A9FSAsdfadsf5sdf78f90as0f8df6dsg432f32s5D8F7SA9DR6G485"
 #################################################################################################################
 #                                   Health Check                                                                #
 #################################################################################################################
@@ -57,7 +62,35 @@ def date_check():
 
     return {"date": current_datetime}
 
+#################################################################################################################
+#                                   Authentication                                                              #
+#################################################################################################################
 
+
+# Function to generate API key dynamically
+def generate_api_key(user_id: str) -> str:
+    concatenated_key = f"{user_id}-{PRIVATE_KEY}"
+    hashed_key = sha256(concatenated_key.encode()).hexdigest()
+    return hashed_key
+
+# Function to validate API key
+def validate_api_key(user_id: str, api_key: str) -> bool:
+    return api_key == generate_api_key(user_id)
+
+
+# Dependency to validate API key
+def check_api_key( user_id: str, api_key: str) -> Dict[str, str]:
+    if validate_api_key( user_id, api_key):
+        return {"user_id": user_id, "api_key": api_key}
+    else:
+        raise HTTPException(status_code=403, detail="Invalid API key")
+
+
+# Route to generate API key dynamically
+@app.get("/generate-api-key/{user_id}",tags=["Authorisation"], include_in_schema=True)
+async def generate_api_key_route(user_id: str):
+    api_key = generate_api_key(user_id)
+    return {"user_id": user_id, "api_key": api_key}
 
 
 #################################################################################################################
@@ -65,7 +98,7 @@ def date_check():
 #################################################################################################################
 
 @app.post("/clear_cache/", tags=["Health Check"])
-async def clear_cache():
+async def clear_cache( credentials: Dict[str, str] = Depends(check_api_key)):
     summary = clear_cache_text_summarize()
     review = clear_cache_review_analyser()
     language = clear_cache_language_identification()
@@ -109,7 +142,7 @@ class SummaryRequest(BaseModel):
 
 
 @app.post('/summarise/', tags=["Summarise"])
-async def create_summary(request: SummaryRequest):
+async def create_summary(request: SummaryRequest, credentials: Dict[str, str] = Depends(check_api_key)):
     try:
         # Use the utility function to summarize the text
         summary = text_summarize(request.text, request.content_type)
@@ -164,7 +197,7 @@ class ReviewAnalyser(BaseModel):
     reviews: Union[str, List[str]]
 
 @app.post('/review_analysis', tags=["Review Analyser"])
-async def create_review_analyser(input_data: ReviewAnalyser):
+async def create_review_analyser(input_data: ReviewAnalyser, credentials: Dict[str, str] = Depends(check_api_key)):
     try:
         # Convert input data to a single string
         if isinstance(input_data.reviews, list):
@@ -195,7 +228,7 @@ class LocationRequest(BaseModel):
 
 
 @app.post('/language_selection', tags=['Location Based language Selection'])
-async def language_selection(request: LocationRequest):
+async def language_selection(request: LocationRequest, credentials: Dict[str, str] = Depends(check_api_key)):
     try:
         # Use the utility function to summarize the text
         language = language_selection_service(request.state, request.country)
@@ -217,7 +250,7 @@ class NetworkRequest(BaseModel):
     search_item : str
 
 @app.post('/network_selection', tags=['Search Based Network Selection'])
-async def network_selection(request: NetworkRequest):
+async def network_selection(request: NetworkRequest, credentials: Dict[str, str] = Depends(check_api_key)):
     try:
         # Use the utility function to summarize the text
         network = network_selection_service(request.search_item)
