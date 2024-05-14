@@ -8,6 +8,8 @@ from datetime import datetime
 from pydantic import BaseModel, validator
 from typing import Dict, List, Union
 import subprocess
+
+from .py.categories_selection import generate_domain_categories_service
 from .py.utils import *
 
 from .py.language_selection import language_selection_service, clear_cache_language_identification
@@ -28,15 +30,19 @@ app = FastAPI(
     redoc_url="/redocs",
     openapi_url="/api/v1/openapi.json",
     openapi_tags=[{"name": "Health Check", "description": "Healthcheck operations"},
-                  #{"name": "Authorisation", "description": "Authorisation Operations"},
+                  # {"name": "Authorisation", "description": "Authorisation Operations"},
                   {"name": "Summarise", "description": "Summarisation operations"},
-                  {"name": "Review Analyser", "description": "Review Analyse operations"},
-                  {"name": "Location Based language Selection", "description": "Language Selection operations"},
-                  {"name": "Search Based Network Selection", "description": "Network Selection operations"}
+                  {"name": "Review Analyser",
+                      "description": "Review Analyse operations"},
+                  {"name": "Location Based language Selection",
+                      "description": "Language Selection operations"},
+                  {"name": "Search Based Network Selection",
+                      "description": "Network Selection operations"},
+                  {"name": "Generate Domain Categories",
+                      "description": "Generate Domain Categories"}
                   ]
 
 )
-
 
 
 current_datetime = datetime.now()
@@ -46,6 +52,7 @@ PRIVATE_KEY = "da98faf9sf3qF0A9FSAsdfadsf5sdf78f90as0f8df6dsg432f32s5D8F7SA9DR6G
 #                                   Health Check                                                                #
 #################################################################################################################
 
+
 @app.get("/healthcheck", tags=["Health Check"])
 def health_check():
     """
@@ -53,6 +60,7 @@ def health_check():
     """
 
     return {"status": "ok"}
+
 
 @app.get("/datecheck", tags=["Health Check"])
 def date_check():
@@ -74,20 +82,22 @@ def generate_api_key(user_id: str) -> str:
     return hashed_key
 
 # Function to validate API key
+
+
 def validate_api_key(user_id: str, api_key: str) -> bool:
     return api_key == generate_api_key(user_id)
 
 
 # Dependency to validate API key
-def check_api_key( user_id: str, api_key: str) -> Dict[str, str]:
-    if validate_api_key( user_id, api_key):
+def check_api_key(user_id: str, api_key: str) -> Dict[str, str]:
+    if validate_api_key(user_id, api_key):
         return {"user_id": user_id, "api_key": api_key}
     else:
         raise HTTPException(status_code=403, detail="Invalid API key")
 
 
 # Route to generate API key dynamically
-@app.get("/generate-api-key/{user_id}",tags=["Authorisation"], include_in_schema=False)
+@app.get("/generate-api-key/{user_id}", tags=["Authorisation"], include_in_schema=False)
 async def generate_api_key_route(user_id: str):
     api_key = generate_api_key(user_id)
     return {"user_id": user_id, "api_key": api_key}
@@ -98,7 +108,7 @@ async def generate_api_key_route(user_id: str):
 #################################################################################################################
 
 @app.post("/clear_cache/", tags=["Health Check"])
-#async def clear_cache( credentials: Dict[str, str] = Depends(check_api_key)):
+# async def clear_cache( credentials: Dict[str, str] = Depends(check_api_key)):
 async def clear_cache():
     summary = clear_cache_text_summarize()
     review = clear_cache_review_analyser()
@@ -120,8 +130,7 @@ async def clear_cache():
         d = "Network Cache Cleared.  "
     else:
         d = "Network Cache Not Cleared.  "
-    return {"status": a + b + c + d }
-
+    return {"status": a + b + c + d}
 
 
 #################################################################################################################
@@ -143,7 +152,7 @@ class SummaryRequest(BaseModel):
 
 
 @app.post('/summarise/', tags=["Summarise"])
-#async def create_summary(request: SummaryRequest, credentials: Dict[str, str] = Depends(check_api_key)):
+# async def create_summary(request: SummaryRequest, credentials: Dict[str, str] = Depends(check_api_key)):
 async def create_summary(request: SummaryRequest):
     try:
         # Use the utility function to summarize the text
@@ -198,8 +207,9 @@ else:
 class ReviewAnalyser(BaseModel):
     reviews: Union[str, List[str]]
 
+
 @app.post('/review_analysis', tags=["Review Analyser"])
-#async def create_review_analyser(input_data: ReviewAnalyser, credentials: Dict[str, str] = Depends(check_api_key)):
+# async def create_review_analyser(input_data: ReviewAnalyser, credentials: Dict[str, str] = Depends(check_api_key)):
 async def create_review_analyser(input_data: ReviewAnalyser):
     try:
         # Convert input data to a single string
@@ -218,7 +228,8 @@ async def create_review_analyser(input_data: ReviewAnalyser):
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         # Catch any other exceptions and return a generic error message
-        raise HTTPException(status_code=500, detail=f"An error occurred during review analysis: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"An error occurred during review analysis: {str(e)}")
 
 
 #################################################################################################################
@@ -231,7 +242,7 @@ class LocationRequest(BaseModel):
 
 
 @app.post('/language_selection', tags=['Location Based language Selection'])
-#async def language_selection(request: LocationRequest, credentials: Dict[str, str] = Depends(check_api_key)):
+# async def language_selection(request: LocationRequest, credentials: Dict[str, str] = Depends(check_api_key)):
 async def language_selection(request: LocationRequest):
     try:
         # Use the utility function to summarize the text
@@ -245,16 +256,18 @@ async def language_selection(request: LocationRequest):
         # Catch any other exceptions and return a generic error message
         raise HTTPException(
             status_code=500, detail="An error occurred during fetching language.")
-    
+
 #################################################################################################################
 #                                   Location Based Language                                                     #
 #################################################################################################################
 
+
 class NetworkRequest(BaseModel):
-    search_item : str
+    search_item: str
+
 
 @app.post('/network_selection', tags=['Search Based Network Selection'])
-#async def network_selection(request: NetworkRequest, credentials: Dict[str, str] = Depends(check_api_key)):
+# async def network_selection(request: NetworkRequest, credentials: Dict[str, str] = Depends(check_api_key)):
 async def network_selection(request: NetworkRequest):
     try:
         # Use the utility function to summarize the text
@@ -268,3 +281,27 @@ async def network_selection(request: NetworkRequest):
         # Catch any other exceptions and return a generic error message
         raise HTTPException(
             status_code=500, detail="An error occurred during fetching network.")
+
+#################################################################################################################
+#                                   Generate Domain Categories                                                   #
+#################################################################################################################
+
+
+class DomainRequest(BaseModel):
+    domain: str
+
+
+@app.post('/generate_domain_categories', tags=['Generate Domain Categories'])
+async def generate_domain_categories(request: DomainRequest):
+    try:
+        # Use the utility function to summarize the text
+        domain = generate_domain_categories_service(request.domain)
+        return domain
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except TypeError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        # Catch any other exceptions and return a generic error message
+        raise HTTPException(
+            status_code=500, detail="An error occurred during fetching domain categories.")
