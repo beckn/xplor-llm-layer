@@ -93,7 +93,7 @@ def llm_output_batch(prompt):
     if response_.status_code == 200:
         return json.loads(response_.json().get('response'))
     else:
-        logging.info(f" Failed to retrieve data, status code:",response_.status_code)
+        logging.info(f" Failed to retrieve data, status code:,{response_.status_code}")
 
 
 #############################################################################################################
