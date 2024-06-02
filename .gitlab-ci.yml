@@ -18,6 +18,6 @@ llm-dev:
     - sshpass -p $XPLOR_LLM_PASSWORD ssh -tt $Default_Username@$XPLOR_LLM_HOST "
         cd /home/ubuntu/xplor-llm-summarizer && docker-compose up -d --build "
     - echo -e "
-      Dev Fast-API Backend URL:- https://fastapi-backend-temp.thewitslab.com/\n
-      Dev Ollama Backend URL:- https://ollama-backend-temp.thewitslab.com/"
+      Dev Fast-API Backend URL:- https://fastapi-backend.thewitslab.com/\n
+      Dev Ollama Backend URL:- https://ollama-backend.thewitslab.com/"
   

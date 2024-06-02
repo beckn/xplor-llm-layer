@@ -15,5 +15,5 @@ services:
       dockerfile: Dockerfile
     container_name: fastapi-dev
     ports:
-      - 8000:8000
+      - 8555:8000
     command: ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "8000"]
