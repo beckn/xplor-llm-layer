@@ -9,14 +9,14 @@ llm-dev:
     - echo "Deploying fastapi and ollama-dev services."
     - |
       sshpass -p $XPLOR_LLM_PASSWORD ssh $Default_Username@$XPLOR_LLM_HOST "
-        if [[ -d xplor-llm-services ]]; then
-          cd /home/ubuntu/xplor-llm-services
+        if [[ -d xplor-llm-summarizer ]]; then
+          cd /home/ubuntu/xplor-llm-summarizer
           docker-compose down
-          cd /home/ubuntu/ &&  sudo rm -rf xplor-llm-services
+          cd /home/ubuntu/ &&  sudo rm -rf xplor-llm-summarizer
         fi "
     - sshpass -p $XPLOR_LLM_PASSWORD ssh $Default_Username@$XPLOR_LLM_HOST  "git clone -b new_develop https://user:'$GITLAB_ACCESS_TOKEN'@gitlab.thewitslab.com/wil-workspace/xplor/xplor-llm-summarizer.git"
     - sshpass -p $XPLOR_LLM_PASSWORD ssh -tt $Default_Username@$XPLOR_LLM_HOST "
-        cd /home/ubuntu/xplor-llm-services && docker-compose up -d --build "
+        cd /home/ubuntu/xplor-llm-summarizer && docker-compose up -d --build "
     - echo -e "
       Dev Fast-API Backend URL:- https://fastapi-backend-temp.thewitslab.com/\n
       Dev Ollama Backend URL:- https://ollama-backend-temp.thewitslab.com/"
