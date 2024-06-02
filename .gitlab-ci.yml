@@ -1,12 +1,10 @@
 stages:
   - build
 
-fastapi_ollama:
+llm-dev:
   stage: build
   tags:
     - gcp
-  only:
-    - new_develop
   script:
     - echo "Deploying fastapi and ollama-dev services."
     - |

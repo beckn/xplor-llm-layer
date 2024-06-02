@@ -3,9 +3,9 @@ version: '3.8'
 services:
   ollama:
     build:
-      context: .
+      context: ./ollama
       dockerfile: Dockerfile
-    container_name: ollama
+    container_name: ollama-dev
     ports:
       - "11434:11434"
       
@@ -13,7 +13,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fastapi
+    container_name: fastapi-dev
     ports:
       - 8000:8000
     command: ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "8000"]
