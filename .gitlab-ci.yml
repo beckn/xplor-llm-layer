@@ -1,43 +1,24 @@
 stages:
   - build
-  - deploy
 
-build:
+fastapi_ollama:
   stage: build
   tags:
     - gcp
   only:
-    - gcp_dev
+    - new_develop
   script:
-    - docker build --platform=linux/amd64 --pull -t "asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/fast-api:$CI_COMMIT_SHORT_SHA" .
-    - docker push asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/fast-api:$CI_COMMIT_SHORT_SHA
-    - Path=$(pwd) && cd $Path/ollama
-    - docker build --platform=linux/amd64 --pull -t "asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/ollama:$CI_COMMIT_SHORT_SHA" .
-    - docker push asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/ollama:$CI_COMMIT_SHORT_SHA  
-    - echo "Image Tag for fast-api - asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/fast-api:$CI_COMMIT_SHORT_SHA"
-    - echo "Image Tag for ollama - asia-south1-docker.pkg.dev/xplor-sunbird-rc/dev-llm/ollama:$CI_COMMIT_SHORT_SHA"
-    - docker image prune -af
-
-deploy:
-  stage: deploy
-  tags:
-    - gcp
-  only:
-    - gcp_dev
-  script:
-    - cat $WITS_PEM_KEY >> wits.pem
-    - cat $WITS_PRIV_KEY >> wits.key
-
-    ## Creating Namespace
-    - kubectl apply -f namespace.yaml
-
-    ## Deploying 'dev-llm-backend' in Namespace
-    - sed "s/latest/${CI_COMMIT_SHORT_SHA}/g" deployment.yaml > deployment.tmp
-    - mv deployment.tmp deployment.yaml
-    - kubectl apply -f deployment.yaml
+    - echo "Deploying fastapi and ollama-dev services."
+    - |
+      sshpass -p $XPLOR_LLM_PASSWORD ssh $Default_Username@$XPLOR_LLM_HOST "
+        if [[ -d xplor-llm-services ]]; then
+          cd /home/ubuntu/xplor-llm-services
+          docker-compose down
+          cd /home/ubuntu/ &&  sudo rm -rf xplor-llm-services
+        fi "
+    - sshpass -p $XPLOR_LLM_PASSWORD ssh $Default_Username@$XPLOR_LLM_HOST  "git clone -b new_develop https://user:'$GITLAB_ACCESS_TOKEN'git@gitlab.thewitslab.com:wil-workspace/xplor/xplor-llm-summarizer.git"
+        cd /home/ubuntu/xplor-llm-services && docker-compose up -d --build "
     - echo -e "
-      Dev Fast-API Backend URL:- https://fastapi-backend.thewitslab.com/\n
-      Dev Ollama Backend URL:- https://ollama-backend.thewitslab.com/"
-
-    ## Deploying 'ingress' in Namespace
-    - kubectl apply -f ingress.yaml
+      Dev Fast-API Backend URL:- https://fastapi-backend-temp.thewitslab.com/\n
+      Dev Ollama Backend URL:- https://ollama-backend-temp.thewitslab.com/"
+  
