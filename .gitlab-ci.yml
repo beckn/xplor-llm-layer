@@ -6,7 +6,7 @@ llm-dev:
   tags:
     - gcp
   script:
-    - echo "Deploying fastapi and ollama-dev services."
+    - echo "Deploying fastapi and ollama services."
     - |
       sshpass -p $XPLOR_LLM_PASSWORD ssh $Default_Username@$XPLOR_LLM_HOST "
         if [[ -d xplor-llm-summarizer ]]; then
@@ -14,6 +14,7 @@ llm-dev:
           docker-compose down
           cd /home/ubuntu/ &&  sudo rm -rf xplor-llm-summarizer
         fi "
+    - sshpass -p $XPLOR_LLM_PASSWORD ssh $Default_Username@$XPLOR_LLM_HOST "docker image prune -af && docker builder prune -f"  
     - sshpass -p $XPLOR_LLM_PASSWORD ssh $Default_Username@$XPLOR_LLM_HOST  "git clone -b new_develop https://user:'$GITLAB_ACCESS_TOKEN'@gitlab.thewitslab.com/wil-workspace/xplor/xplor-llm-summarizer.git"
     - sshpass -p $XPLOR_LLM_PASSWORD ssh -tt $Default_Username@$XPLOR_LLM_HOST "
         cd /home/ubuntu/xplor-llm-summarizer && docker-compose up -d --build "
