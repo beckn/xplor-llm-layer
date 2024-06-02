@@ -15,6 +15,7 @@ llm-dev:
           cd /home/ubuntu/ &&  sudo rm -rf xplor-llm-services
         fi "
     - sshpass -p $XPLOR_LLM_PASSWORD ssh $Default_Username@$XPLOR_LLM_HOST  "git clone -b new_develop https://user:'$GITLAB_ACCESS_TOKEN'@gitlab.thewitslab.com:wil-workspace/xplor/xplor-llm-summarizer.git"
+    - sshpass -p $XPLOR_LLM_PASSWORD ssh -tt $Default_Username@$XPLOR_LLM_HOST "
         cd /home/ubuntu/xplor-llm-services && docker-compose up -d --build "
     - echo -e "
       Dev Fast-API Backend URL:- https://fastapi-backend-temp.thewitslab.com/\n
