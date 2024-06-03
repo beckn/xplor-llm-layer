@@ -21,6 +21,6 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              count: 2   
+              count: 4
               capabilities: [gpu]
     runtime: nvidia
