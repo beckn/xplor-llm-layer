@@ -23,5 +23,4 @@ services:
             - driver: nvidia
               count: 2   
               capabilities: [gpu]
-
     runtime: nvidia
